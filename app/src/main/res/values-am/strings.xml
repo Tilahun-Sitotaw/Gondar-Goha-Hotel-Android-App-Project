@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">ጎሃ ሆቴል ኮኔክት</string>
+    <string name="app_tagline">ታሪክ ሰማይን የሚገናኝበት</string>
+
+    <!-- Auth -->
+    <string name="sign_in">ግባ</string>
+    <string name="sign_out">ውጣ</string>
+    <string name="create_account">መለያ ፍጠር</string>
+    <string name="continue_as_guest">እንደ እንግዳ ቀጥል</string>
+    <string name="email_address">ኢሜይል አድራሻ</string>
+    <string name="password">ይለፍ ቃል</string>
+    <string name="full_name">ሙሉ ስም</string>
+    <string name="welcome_back">እንኳን ደህና ተመለስ</string>
+    <string name="new_here">አዲስ ነህ? መለያ ፍጠር</string>
+    <string name="already_have_account">መለያ አለህ? ግባ</string>
+    <string name="fill_all_fields">እባክዎ ሁሉንም መስኮች ይሙሉ</string>
+    <string name="password_min_length">ይለፍ ቃሉ ቢያንስ 6 ቁምፊዎች ሊኖረው ይገባል</string>
+
+    <!-- Home -->
+    <string name="hotel_services">የሆቴል አገልግሎቶች</string>
+    <string name="quick_actions">ፈጣን ድርጊቶች</string>
+    <string name="good_morning">ጥዋት</string>
+    <string name="good_afternoon">ከሰዓት</string>
+    <string name="good_evening">ምሽት</string>
+    <string name="sunset_alert_title">የፀሐይ መጥለቅ ማስጠንቀቂያ!</string>
+    <string name="sunset_alert_body">ምርጥ የእይታ ጊዜ በ%1$d ደቂቃ — ወደ ቴራሱ ሂድ!</string>
+    <string name="hotel_tagline">በጎንደር ታሪካዊ ኮረብታ ላይ ተቀምጦ፣ ጎሃ ሆቴል ከ1968 ጀምሮ እንግዶቹን ሲቀበል ቆይቷል።</string>
+
+    <!-- Rooms -->
+    <string name="browse_rooms">ክፍሎችን ይዳስሱ</string>
+    <string name="room_details">የክፍል ዝርዝሮች</string>
+    <string name="book_now">አሁን ይያዙ</string>
+    <string name="book_room">ክፍል ይያዙ</string>
+    <string name="check_in">የመግቢያ ቀን</string>
+    <string name="check_out">የወጪ ቀን</string>
+    <string name="number_of_guests">የእንግዶች ቁጥር</string>
+    <string name="special_requests">ልዩ ጥያቄዎች (አማራጭ)</string>
+    <string name="confirm_booking">ቦታ ማስያዙን ያረጋግጡ</string>
+    <string name="available">ይገኛል</string>
+    <string name="occupied">ተያዟል</string>
+    <string name="per_night">በአንድ ሌሊት</string>
+    <string name="no_rooms_available">ምንም ክፍሎች አይገኙም</string>
+    <string name="about_this_room">ስለ ይህ ክፍል</string>
+    <string name="amenities">መቋቋሚያዎች</string>
+
+    <!-- In-Room Request -->
+    <string name="in_room_request">የክፍል ውስጥ ጥያቄ</string>
+    <string name="we_ll_be_there">በቅርቡ እዚህ እንሆናለን</string>
+    <string name="what_do_you_need">ምን ትፈልጋለህ?</string>
+    <string name="extra_towels">ተጨማሪ ፎጣዎች</string>
+    <string name="extra_pillows">ተጨማሪ ትራሶች</string>
+    <string name="maintenance">ጥገና</string>
+    <string name="housekeeping">የቤት አቆዳዳደር</string>
+    <string name="room_service">የክፍል አገልግሎት</string>
+    <string name="wake_up_call">ማንቂያ ጥሪ</string>
+    <string name="extra_blanket">ተጨማሪ ብርድ ልብስ</string>
+    <string name="toiletries">የሽንት ቤት ዕቃዎች</string>
+    <string name="additional_notes">ተጨማሪ ማስታወሻዎች (አማራጭ)</string>
+    <string name="submit_request">ጥያቄ ያስገቡ</string>
+    <string name="request_submitted">ጥያቄ ተልኳል!</string>
+    <string name="request_submitted_body">ቡድናችን በቅርቡ ከናንተ ጋር ይሆናል።</string>
+
+    <!-- Restaurant / Food -->
+    <string name="restaurant">ምግብ ቤት</string>
+    <string name="your_cart">የእርስዎ ቅርጫት</string>
+    <string name="search_dishes">ምግቦችን ይፈልጉ…</string>
+    <string name="chefs_recommendations">⭐ የሼፉ ምክሮች</string>
+    <string name="view_cart">ቅርጫት ይመልከቱ</string>
+    <string name="place_order">ትዕዛዝ ይስጡ</string>
+    <string name="browse_menu">ምናሌ ይዳስሱ</string>
+    <string name="cart_empty">ቅርጫቱ ባዶ ነው</string>
+    <string name="clear_cart">ቅርጫቱን አጽዱ</string>
+    <string name="room_number">የክፍል ቁጥር</string>
+
+    <!-- Order Tracking -->
+    <string name="order_tracking">የትዕዛዝ ክትትል</string>
+    <string name="order_received">ትዕዛዝ ተቀብሏል</string>
+    <string name="preparing">እየተዘጋጀ ነው</string>
+    <string name="on_the_way">በመምጣት ላይ ነው</string>
+    <string name="delivered">ደርሷል</string>
+    <string name="order_summary">የትዕዛዝ ማጠቃለያ</string>
+    <string name="total">ድምር</string>
+    <string name="back_to_menu">ወደ ምናሌ ተመለስ</string>
+
+    <!-- Concierge -->
+    <string name="digital_concierge">ዲጂታል ኮንሴርጅ</string>
+    <string name="concierge_online">ኦንላይን · 24/7 እርዳታ</string>
+    <string name="ask_anything">ማንኛውንም ጠይቅ…</string>
+
+    <!-- Cultural Guide -->
+    <string name="cultural_guide">ባሕላዊ መመሪያ</string>
+    <string name="guide_subtitle">ጎንደር እና አካባቢ · ያለ ኢንተርኔት ይሰራል</string>
+    <string name="search_attractions">መስህቦችን ይፈልጉ…</string>
+    <string name="nearby_attractions">📍 ቅርብ ስፍራዎች</string>
+    <string name="all_attractions">ሁሉም ስፍራዎች</string>
+    <string name="available_offline">ያለ ኢንተርኔት ይገኛል</string>
+    <string name="no_attractions_found">ምንም ስፍራዎች አልተገኙም</string>
+
+    <!-- QR Scanner -->
+    <string name="qr_scanner">QR ቅኝት</string>
+    <string name="qr_hint">ካሜራውን ወደ ጎሃ ሆቴል QR ኮድ ያዞሩ</string>
+    <string name="camera_permission_required">የካሜራ ፈቃድ ያስፈልጋል</string>
+    <string name="grant_permission">ፈቃድ ስጥ</string>
+
+    <!-- Settings -->
+    <string name="settings">ቅንብሮች</string>
+    <string name="language">ቋንቋ</string>
+    <string name="about">ስለ</string>
+    <string name="support">ድጋፍ</string>
+    <string name="cancel">ሰርዝ</string>
+    <string name="sign_out_confirm_title">ውጣ</string>
+    <string name="sign_out_confirm_body">ከጎሃ ሆቴል ኮኔክት መውጣት ይፈልጋሉ?</string>
+</resources>

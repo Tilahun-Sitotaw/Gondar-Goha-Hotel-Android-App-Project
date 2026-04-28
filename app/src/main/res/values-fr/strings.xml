@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Goha Hôtel Connect</string>
+    <string name="app_tagline">Là où l\'Histoire Rencontre le Ciel</string>
+
+    <!-- Auth -->
+    <string name="sign_in">Se Connecter</string>
+    <string name="sign_out">Se Déconnecter</string>
+    <string name="create_account">Créer un Compte</string>
+    <string name="continue_as_guest">Continuer en tant qu\'Invité</string>
+    <string name="email_address">Adresse Email</string>
+    <string name="password">Mot de Passe</string>
+    <string name="full_name">Nom Complet</string>
+    <string name="welcome_back">Bon Retour</string>
+    <string name="new_here">Nouveau ici? Créer un Compte</string>
+    <string name="already_have_account">Vous avez déjà un compte? Se Connecter</string>
+    <string name="fill_all_fields">Veuillez remplir tous les champs</string>
+    <string name="password_min_length">Le mot de passe doit comporter au moins 6 caractères</string>
+
+    <!-- Home -->
+    <string name="hotel_services">Services de l\'Hôtel</string>
+    <string name="quick_actions">Actions Rapides</string>
+    <string name="good_morning">Matin</string>
+    <string name="good_afternoon">Après-midi</string>
+    <string name="good_evening">Soir</string>
+    <string name="sunset_alert_title">Alerte Coucher de Soleil!</string>
+    <string name="sunset_alert_body">Meilleure heure de vue dans %1$d min — direction la terrasse!</string>
+    <string name="hotel_tagline">Perché sur la colline historique de Gondar, l\'Hôtel Goha accueille ses hôtes depuis 1968.</string>
+
+    <!-- Rooms -->
+    <string name="browse_rooms">Parcourir les Chambres</string>
+    <string name="room_details">Détails de la Chambre</string>
+    <string name="book_now">Réserver Maintenant</string>
+    <string name="book_room">Réserver la Chambre</string>
+    <string name="check_in">Date d\'Arrivée</string>
+    <string name="check_out">Date de Départ</string>
+    <string name="number_of_guests">Nombre d\'Invités</string>
+    <string name="special_requests">Demandes Spéciales (optionnel)</string>
+    <string name="confirm_booking">Confirmer la Réservation</string>
+    <string name="available">Disponible</string>
+    <string name="occupied">Occupé</string>
+    <string name="per_night">par nuit</string>
+    <string name="no_rooms_available">Aucune chambre disponible</string>
+    <string name="about_this_room">À Propos de cette Chambre</string>
+    <string name="amenities">Équipements</string>
+
+    <!-- In-Room Request -->
+    <string name="in_room_request">Service en Chambre</string>
+    <string name="we_ll_be_there">Nous arriverons bientôt</string>
+    <string name="what_do_you_need">Qu\'avez-vous besoin?</string>
+    <string name="extra_towels">Serviettes Supplémentaires</string>
+    <string name="extra_pillows">Oreillers Supplémentaires</string>
+    <string name="maintenance">Maintenance</string>
+    <string name="housekeeping">Ménage</string>
+    <string name="room_service">Service en Chambre</string>
+    <string name="wake_up_call">Réveil Téléphonique</string>
+    <string name="extra_blanket">Couverture Supplémentaire</string>
+    <string name="toiletries">Articles de Toilette</string>
+    <string name="additional_notes">Notes Supplémentaires (optionnel)</string>
+    <string name="submit_request">Soumettre la Demande</string>
+    <string name="request_submitted">Demande Soumise!</string>
+    <string name="request_submitted_body">Notre équipe sera avec vous sous peu.</string>
+
+    <!-- Restaurant / Food -->
+    <string name="restaurant">Restaurant</string>
+    <string name="your_cart">Votre Panier</string>
+    <string name="search_dishes">Rechercher des plats…</string>
+    <string name="chefs_recommendations">⭐ Recommandations du Chef</string>
+    <string name="view_cart">Voir le Panier</string>
+    <string name="place_order">Passer la Commande</string>
+    <string name="browse_menu">Parcourir le Menu</string>
+    <string name="cart_empty">Votre panier est vide</string>
+    <string name="clear_cart">Vider le Panier</string>
+    <string name="room_number">Numéro de Chambre</string>
+
+    <!-- Order Tracking -->
+    <string name="order_tracking">Suivi de Commande</string>
+    <string name="order_received">Commande Reçue</string>
+    <string name="preparing">En Préparation</string>
+    <string name="on_the_way">En Route</string>
+    <string name="delivered">Livré</string>
+    <string name="order_summary">Résumé de la Commande</string>
+    <string name="total">Total</string>
+    <string name="back_to_menu">Retour au Menu</string>
+
+    <!-- Concierge -->
+    <string name="digital_concierge">Concierge Numérique</string>
+    <string name="concierge_online">En ligne · Assistance 24h/24</string>
+    <string name="ask_anything">Posez-moi une question…</string>
+
+    <!-- Cultural Guide -->
+    <string name="cultural_guide">Guide Culturel</string>
+    <string name="guide_subtitle">Gondar et Environs · Fonctionne Hors Ligne</string>
+    <string name="search_attractions">Rechercher des attractions…</string>
+    <string name="nearby_attractions">📍 Attractions à Proximité</string>
+    <string name="all_attractions">Toutes les Attractions</string>
+    <string name="available_offline">Disponible hors ligne</string>
+    <string name="no_attractions_found">Aucune attraction trouvée</string>
+
+    <!-- QR Scanner -->
+    <string name="qr_scanner">Scanner QR</string>
+    <string name="qr_hint">Pointez la caméra vers un code QR de l\'Hôtel Goha</string>
+    <string name="camera_permission_required">Permission Caméra Requise</string>
+    <string name="grant_permission">Accorder la Permission</string>
+
+    <!-- Settings -->
+    <string name="settings">Paramètres</string>
+    <string name="language">Langue</string>
+    <string name="about">À Propos</string>
+    <string name="support">Assistance</string>
+    <string name="cancel">Annuler</string>
+    <string name="sign_out_confirm_title">Se Déconnecter</string>
+    <string name="sign_out_confirm_body">Êtes-vous sûr de vouloir vous déconnecter de Goha Hôtel Connect?</string>
+</resources>

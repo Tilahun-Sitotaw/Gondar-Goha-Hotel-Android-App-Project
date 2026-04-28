@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "442557962594",
+    "project_id": "gohahotelconnect",
+    "storage_bucket": "gohahotelconnect.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:442557962594:android:a4e421b80f32bca130743b",
+        "android_client_info": {
+          "package_name": "com.gohahotel.connect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYIkUc7uoLSSeLl2cN9Jzo9qsg6408zqE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:442557962594:android:f3816bf70e4f8a5a30743b",
+        "android_client_info": {
+          "package_name": "com.gohahotel.connect.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYIkUc7uoLSSeLl2cN9Jzo9qsg6408zqE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
