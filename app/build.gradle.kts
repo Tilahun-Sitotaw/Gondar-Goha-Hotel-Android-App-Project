@@ -62,11 +62,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.foundation)
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.foundation)
 
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
@@ -119,6 +114,7 @@ dependencies {
     ksp(libs.hilt.work.compiler)
 
     // QR / Camera
+    implementation(libs.guava)
     implementation(libs.mlkit.barcode)
     implementation(libs.camerax.core)
     implementation(libs.camerax.camera2)
@@ -127,6 +123,8 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

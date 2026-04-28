@@ -14,11 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.tooling.preview.Preview
+import com.gohahotel.connect.domain.model.*
 import com.gohahotel.connect.ui.payment.PaymentSelectionSheet
 import com.gohahotel.connect.ui.payment.PaymentViewModel
 import coil.compose.AsyncImage
 import com.gohahotel.connect.ui.theme.*
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,7 @@ fun RoomDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val paymentUiState by paymentViewModel.uiState.collectAsState()
+    val room = uiState.selectedRoom
 
     LaunchedEffect(roomId) { viewModel.loadRoomDetail(roomId) }
 
@@ -67,8 +70,6 @@ fun RoomDetailScreen(
             paymentViewModel.resetState()
         }
     }
-
-    val room = uiState.selectedRoom
 
     Scaffold(
         topBar = {
@@ -330,6 +331,17 @@ fun RoomDetailScreen(
                 },
                 isProcessing = paymentUiState.isProcessing
             )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RoomDetailPreview() {
+    GohaHotelTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Text("Switch to Split/Design view to see the UI", 
+                 modifier = Modifier.padding(32.dp))
         }
     }
 }

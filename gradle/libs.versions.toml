@@ -28,6 +28,9 @@ gson = "2.11.0"
 generativeai = "0.4.0"
 mapsCompose = "4.4.1"
 googlePlayServicesMaps = "19.0.0"
+guava = "33.3.1-android"
+mockk = "1.13.12"
+kotlinxCoroutinesTest = "1.8.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -76,6 +79,9 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 google-ai-generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "googlePlayServicesMaps" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

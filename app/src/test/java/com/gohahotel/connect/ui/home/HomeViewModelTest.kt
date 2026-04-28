@@ -32,13 +32,13 @@ class HomeViewModelTest {
     @Test
     fun `loadUserInfo updates UI state with guest name`() = runTest {
         val mockUser: FirebaseUser = mockk()
-        every { mockUser.displayName } returns "Tilahun"
+        every { mockUser.displayName } returns "Guest User"
         every { authRepository.currentUser } returns mockUser
 
         viewModel = HomeViewModel(authRepository, context)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals("Tilahun", viewModel.uiState.value.guestName)
+        assertEquals("Guest User", viewModel.uiState.value.guestName)
     }
 
     @Test

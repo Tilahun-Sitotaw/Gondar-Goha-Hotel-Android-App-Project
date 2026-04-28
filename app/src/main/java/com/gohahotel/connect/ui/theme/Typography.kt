@@ -7,17 +7,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Using system fonts as fallback (replace with downloaded fonts for production)
-val PlayfairFamily = FontFamily(
-    Font(android.R.font.serif, FontWeight.Normal),
-    Font(android.R.font.serif, FontWeight.Bold)
-)
+// Using system fonts as fallback
+val PlayfairFamily = FontFamily.Serif
 
-val DMSansFamily = FontFamily(
-    Font(android.R.font.sans_serif, FontWeight.Normal),
-    Font(android.R.font.sans_serif, FontWeight.Medium),
-    Font(android.R.font.sans_serif, FontWeight.Bold)
-)
+val DMSansFamily = FontFamily.SansSerif
 
 val GohaTypography = Typography(
     // Display – Hero titles, splash screen
