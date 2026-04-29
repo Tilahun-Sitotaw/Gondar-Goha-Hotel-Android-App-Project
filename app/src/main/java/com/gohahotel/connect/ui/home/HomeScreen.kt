@@ -159,6 +159,7 @@ fun HomeScreen(
             "Hotel Services",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
         )
 
@@ -191,6 +192,7 @@ fun HomeScreen(
             "Quick Actions",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
         )
 
@@ -213,7 +215,9 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = CardDark)
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -224,7 +228,7 @@ fun HomeScreen(
                 Text(
                     "Perched on Gondar's historic hilltop,\nGoha Hotel has welcomed guests since 1968.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
@@ -247,7 +251,10 @@ private fun ServiceCard(item: ServiceItem) {
         onClick = item.onClick,
         modifier = Modifier.fillMaxWidth().height(130.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -256,14 +263,14 @@ private fun ServiceCard(item: ServiceItem) {
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(item.bgColor.copy(alpha = 0.2f), CircleShape),
+                    .background(item.iconTint.copy(alpha = 0.15f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(item.icon, null, tint = item.iconTint, modifier = Modifier.size(24.dp))
             }
             Text(item.label, style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface)
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -273,7 +280,7 @@ private fun QuickActionChip(label: String, icon: ImageVector, onClick: () -> Uni
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(50),
-        color = CardDark,
+        color = MaterialTheme.colorScheme.surfaceVariant,
         border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.3f))
     ) {
         Row(
@@ -283,7 +290,7 @@ private fun QuickActionChip(label: String, icon: ImageVector, onClick: () -> Uni
         ) {
             Icon(icon, null, tint = GoldPrimary, modifier = Modifier.size(16.dp))
             Text(label, style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface)
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

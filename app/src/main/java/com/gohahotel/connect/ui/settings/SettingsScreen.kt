@@ -12,10 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gohahotel.connect.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +83,9 @@ fun SettingsScreen(
             Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape    = RoundedCornerShape(18.dp),
-                colors   = CardDefaults.cardColors(containerColor = CardDark)
+                colors   = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
                 Column {
                     languages.forEachIndexed { i, (code, name, flag) ->
@@ -95,7 +100,8 @@ fun SettingsScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Text(flag, fontSize = 24.sp)
-                                Text(name, style = MaterialTheme.typography.bodyMedium)
+                                Text(name, style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (uiState.selectedLanguage == code) {
                                 Icon(Icons.Default.CheckCircle, null,
@@ -117,7 +123,9 @@ fun SettingsScreen(
             Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape    = RoundedCornerShape(18.dp),
-                colors   = CardDefaults.cardColors(containerColor = CardDark)
+                colors   = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
                 Column {
                     SettingsRow(Icons.Default.Hotel, "Hotel", "Goha Hotel, Gondar")
@@ -140,7 +148,9 @@ fun SettingsScreen(
             Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape    = RoundedCornerShape(18.dp),
-                colors   = CardDefaults.cardColors(containerColor = CardDark)
+                colors   = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
                 Column {
                     SettingsRow(Icons.Default.SupportAgent, "24/7 Concierge", "Chat with us anytime")
@@ -166,12 +176,27 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(32.dp))
 
+            val currentDateTime = remember {
+                SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()).format(Date())
+            }
+
             Text(
-                "© 2024 Goha Hotel · Gondar, Ethiopia\nAll rights reserved.",
+                text = "Today: $currentDateTime",
+                style = MaterialTheme.typography.labelMedium,
+                color = GoldPrimary,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = "© ${Calendar.getInstance().get(Calendar.YEAR)} Goha Hotel · Gondar, Ethiopia\nAll rights reserved.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(0.35f),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(16.dp))
         }
@@ -215,9 +240,10 @@ private fun SettingsRow(icon: ImageVector, label: String, value: String) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, Modifier.size(18.dp), tint = GoldPrimary)
-            Text(label, style = MaterialTheme.typography.bodyMedium)
+            Text(label, style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Text(value, style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(0.55f))
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.7f))
     }
 }
