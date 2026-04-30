@@ -13,7 +13,8 @@ import javax.inject.Inject
 data class AuthUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val error: String?     = null
+    val error: String?     = null,
+    val message: String?   = null
 )
 
 @HiltViewModel
@@ -72,5 +73,27 @@ class AuthViewModel @Inject constructor(
                 .onSuccess { _uiState.update { it.copy(isLoading = false, isSuccess = true) } }
                 .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
         }
+    }
+
+    fun resetPassword(email: String) {
+        if (email.isBlank()) {
+            _uiState.update { it.copy(error = "Please enter your email to reset password", message = null) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null, message = null) }
+            authRepository.sendPasswordResetEmail(email)
+                .onSuccess { 
+                    _uiState.update { it.copy(isLoading = false, message = "Reset link sent to $email", error = null) }
+                }
+                .onFailure { e -> 
+                    _uiState.update { it.copy(isLoading = false, error = e.message, message = null) }
+                }
+        }
+    }
+
+    fun signInWithGoogle() {
+        // This typically triggers the Google Identity / One Tap UI
+        _uiState.update { it.copy(error = "Google Sign-In initialized...") }
     }
 }
