@@ -37,9 +37,20 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun register(email: String, password: String, displayName: String) {
-        if (email.isBlank() || password.isBlank() || displayName.isBlank()) {
+    fun register(
+        email: String,
+        password: String,
+        confirmPassword: String,
+        displayName: String,
+        phoneNumber: String,
+        address: String
+    ) {
+        if (email.isBlank() || password.isBlank() || displayName.isBlank() || phoneNumber.isBlank() || address.isBlank()) {
             _uiState.update { it.copy(error = "Please fill in all fields") }
+            return
+        }
+        if (password != confirmPassword) {
+            _uiState.update { it.copy(error = "Passwords do not match") }
             return
         }
         if (password.length < 6) {

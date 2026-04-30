@@ -33,6 +33,9 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var isRegisterMode by remember { mutableStateOf(false) }
     var displayName by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) onLoginSuccess()
@@ -50,50 +53,62 @@ fun LoginScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(40.dp))
 
             // Logo area
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(60.dp)
                     .background(
                         Brush.radialGradient(listOf(GoldLight, GoldPrimary)),
-                        RoundedCornerShape(20.dp)
+                        RoundedCornerShape(16.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text("G", color = SurfaceDark, fontSize = 44.sp, fontWeight = FontWeight.Bold)
+                Text("G", color = SurfaceDark, fontSize = 36.sp, fontWeight = FontWeight.Bold)
             }
 
-            Spacer(Modifier.height(16.dp))
-            Text("GOHA HOTEL", style = MaterialTheme.typography.headlineMedium,
+            Spacer(Modifier.height(12.dp))
+            Text("GOHA HOTEL", style = MaterialTheme.typography.headlineSmall,
                 color = GoldPrimary, fontWeight = FontWeight.Bold)
-            Text("GONDAR · ETHIOPIA", style = MaterialTheme.typography.labelMedium,
-                color = GoldLight.copy(alpha = 0.6f), letterSpacing = 3.sp)
+            Text("GONDAR · ETHIOPIA", style = MaterialTheme.typography.labelSmall,
+                color = GoldLight.copy(alpha = 0.6f), letterSpacing = 2.sp)
 
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(24.dp))
 
             // Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = CardDark)
+                colors = CardDefaults.cardColors(containerColor = CardDark.copy(alpha = 0.9f))
             ) {
-                Column(Modifier.padding(24.dp)) {
+                Column(Modifier.padding(20.dp)) {
                     Text(
                         if (isRegisterMode) "Create Account" else "Welcome Back",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = OnSurfaceDark,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         if (isRegisterMode) "Register to enjoy premium services"
                         else "Sign in to access hotel services",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        color = OnSurfaceDark.copy(alpha = 0.6f)
                     )
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(20.dp))
+
+                    val textFieldColors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = OnSurfaceDark,
+                        unfocusedTextColor = OnSurfaceDark,
+                        focusedBorderColor = GoldPrimary,
+                        unfocusedBorderColor = GoldLight.copy(alpha = 0.3f),
+                        focusedLabelColor = GoldPrimary,
+                        unfocusedLabelColor = GoldLight.copy(alpha = 0.6f),
+                        focusedLeadingIconColor = GoldPrimary,
+                        unfocusedLeadingIconColor = GoldLight.copy(alpha = 0.6f),
+                        cursorColor = GoldPrimary
+                    )
 
                     AnimatedVisibility(isRegisterMode) {
                         Column {
@@ -104,9 +119,35 @@ fun LoginScreen(
                                 leadingIcon = { Icon(Icons.Default.Person, null) },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
-                                singleLine = true
+                                singleLine = true,
+                                colors = textFieldColors
                             )
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = phoneNumber,
+                                onValueChange = { phoneNumber = it },
+                                label = { Text("Phone Number") },
+                                leadingIcon = { Icon(Icons.Default.Phone, null) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                colors = textFieldColors
+                            )
+                            Spacer(Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = address,
+                                onValueChange = { address = it },
+                                label = { Text("Address / Room Number") },
+                                leadingIcon = { Icon(Icons.Default.LocationOn, null) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true,
+                                colors = textFieldColors
+                            )
+                            Spacer(Modifier.height(8.dp))
                         }
                     }
 
@@ -118,10 +159,11 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        colors = textFieldColors
                     )
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(8.dp))
 
                     OutlinedTextField(
                         value = password,
@@ -132,7 +174,8 @@ fun LoginScreen(
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = "Toggle password"
+                                    contentDescription = "Toggle password",
+                                    tint = GoldLight.copy(alpha = 0.6f)
                                 )
                             }
                         },
@@ -140,8 +183,27 @@ fun LoginScreen(
                         else PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        singleLine = true
+                        singleLine = true,
+                        colors = textFieldColors
                     )
+
+                    AnimatedVisibility(isRegisterMode) {
+                        Column {
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = confirmPassword,
+                                onValueChange = { confirmPassword = it },
+                                label = { Text("Confirm Password") },
+                                leadingIcon = { Icon(Icons.Default.LockClock, null) },
+                                visualTransformation = if (passwordVisible) VisualTransformation.None
+                                else PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true,
+                                colors = textFieldColors
+                            )
+                        }
+                    }
 
                     if (uiState.error != null) {
                         Spacer(Modifier.height(8.dp))
@@ -154,13 +216,20 @@ fun LoginScreen(
                         )
                     }
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(20.dp))
 
                     // Primary button
                     Button(
                         onClick = {
                             if (isRegisterMode)
-                                viewModel.register(email.trim(), password, displayName.trim())
+                                viewModel.register(
+                                    email = email.trim(),
+                                    password = password,
+                                    confirmPassword = confirmPassword,
+                                    displayName = displayName.trim(),
+                                    phoneNumber = phoneNumber.trim(),
+                                    address = address.trim()
+                                )
                             else
                                 viewModel.login(email.trim(), password)
                         },
