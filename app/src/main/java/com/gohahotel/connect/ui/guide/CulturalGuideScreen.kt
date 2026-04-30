@@ -1,5 +1,6 @@
 package com.gohahotel.connect.ui.guide
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -11,9 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,102 +34,130 @@ fun CulturalGuideScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val categories = listOf(null) + GuideCategory.values().toList()
+    val categories = listOf(null) + GuideCategory.entries.toList()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Cultural Guide", fontWeight = FontWeight.Bold)
-                        Text("Gondar & Surroundings · Works Offline",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = SuccessGreen)
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-
-            // Search
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = viewModel::search,
-                placeholder  = { Text("Search attractions...") },
-                leadingIcon  = { Icon(Icons.Default.Search, null) },
-                modifier     = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                shape        = RoundedCornerShape(14.dp),
-                singleLine   = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = GoldPrimary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(0.4f)
-                )
-            )
-
-            // Category filter
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Modern Parallax-style Header ──────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .background(Brush.verticalGradient(listOf(TealDark, SurfaceDark)))
             ) {
-                items(categories) { cat ->
-                    FilterChip(
-                        selected = uiState.selectedCategory == cat,
-                        onClick  = { viewModel.selectCategory(cat) },
-                        label    = { Text(if (cat == null) "All" else "${cat.icon} ${cat.displayName}") },
-                        colors   = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = GoldPrimary,
-                            selectedLabelColor     = SurfaceDark
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp)
+                        .padding(top = 20.dp),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onBack, modifier = Modifier.offset(x = (-12).dp)) {
+                            Icon(Icons.Default.ArrowBack, "Back", tint = GoldPrimary)
+                        }
+                        Text(
+                            "Cultural Guide",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = GoldPrimary
                         )
+                    }
+                    Text(
+                        "Discover the wonders of Gondar",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = OnSurfaceDark.copy(alpha = 0.6f)
                     )
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
-
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+            // ── Minimal Search & Filter ───────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-25).dp)
+                    .padding(horizontal = 16.dp)
             ) {
-                // Nearby section
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp,
+                    shadowElevation = 4.dp
+                ) {
+                    TextField(
+                        value = uiState.searchQuery,
+                        onValueChange = viewModel::search,
+                        placeholder = { Text("Search historic sites, food...") },
+                        leadingIcon = { Icon(Icons.Default.Search, null, tint = GoldPrimary) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        singleLine = true
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
+                ) {
+                    items(categories) { cat ->
+                        val isSelected = uiState.selectedCategory == cat
+                        Surface(
+                            onClick = { viewModel.selectCategory(cat) },
+                            shape = RoundedCornerShape(50),
+                            color = if (isSelected) GoldPrimary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = if (!isSelected) BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.2f)) else null
+                        ) {
+                            Text(
+                                text = if (cat == null) "All" else "${cat.icon} ${cat.displayName}",
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (isSelected) SurfaceDark else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── Content ──────────────────────────────────────────────────────────
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().offset(y = (-10).dp),
+                contentPadding = PaddingValues(bottom = 24.dp, start = 16.dp, end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 if (uiState.nearbyEntries.isNotEmpty() && uiState.searchQuery.isBlank()) {
                     item {
-                        Text("📍 Nearby Attractions",
-                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            "📍 Featured Nearby",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = GoldPrimary,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             items(uiState.nearbyEntries) { entry ->
-                                NearbyCard(entry = entry, onClick = { onEntryClick(entry.id) })
+                                FeaturedGuideCard(entry = entry, onClick = { onEntryClick(entry.id) })
                             }
                         }
                         Spacer(Modifier.height(8.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
-                        Spacer(Modifier.height(4.dp))
-                        Text("All Attractions",
-                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            "All Attractions",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
 
-                items(uiState.entries, key = { it.id }) { entry ->
-                    GuideEntryCard(entry = entry, onClick = { onEntryClick(entry.id) })
-                }
-
-                if (uiState.entries.isEmpty() && !uiState.isLoading) {
-                    item {
-                        Box(Modifier.fillParentMaxWidth().height(200.dp),
-                            contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🗺️", fontSize = 48.sp)
-                                Spacer(Modifier.height(8.dp))
-                                Text("No attractions found",
-                                    color = MaterialTheme.colorScheme.onBackground.copy(0.5f))
-                            }
-                        }
-                    }
+                items(uiState.entries) { entry ->
+                    ModernGuideCard(entry = entry, onClick = { onEntryClick(entry.id) })
                 }
             }
         }
@@ -133,34 +165,55 @@ fun CulturalGuideScreen(
 }
 
 @Composable
-private fun NearbyCard(entry: GuideEntry, onClick: () -> Unit) {
+private fun FeaturedGuideCard(entry: GuideEntry, onClick: () -> Unit) {
     Card(
-        onClick  = onClick,
-        modifier = Modifier.width(160.dp),
-        shape    = RoundedCornerShape(16.dp),
-        colors   = CardDefaults.cardColors(containerColor = CardDark)
+        onClick = onClick,
+        modifier = Modifier.width(220.dp).height(280.dp),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column {
-            Box(Modifier.fillMaxWidth().height(90.dp)
-                .background(Brush.verticalGradient(listOf(TealDark, SurfaceVariantDark)))) {
-                if (entry.imageUrls.isNotEmpty()) {
-                    AsyncImage(entry.imageUrls.first(), entry.title,
-                        Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                } else {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(entry.category.icon, fontSize = 32.sp)
-                    }
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (entry.imageUrls.isNotEmpty()) {
+                AsyncImage(
+                    model = entry.imageUrls.first(),
+                    contentDescription = entry.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(Modifier.fillMaxSize().background(SurfaceVariantDark), contentAlignment = Alignment.Center) {
+                    Text(entry.category.icon, fontSize = 64.sp)
                 }
             }
-            Column(Modifier.padding(10.dp)) {
-                Text(entry.title, style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold, maxLines = 2)
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(Icons.Default.LocationOn, null, Modifier.size(12.dp), tint = GoldPrimary)
-                    Text("${entry.distanceFromHotelKm} km",
-                        style = MaterialTheme.typography.labelSmall, color = GoldPrimary)
+            // Gradient Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                            startY = 400f
+                        )
+                    )
+            )
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Text(
+                    entry.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, null, tint = GoldPrimary, modifier = Modifier.size(12.dp))
+                    Text(
+                        "${entry.distanceFromHotelKm} km",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = GoldPrimary
+                    )
                 }
             }
         }
@@ -168,60 +221,81 @@ private fun NearbyCard(entry: GuideEntry, onClick: () -> Unit) {
 }
 
 @Composable
-private fun GuideEntryCard(entry: GuideEntry, onClick: () -> Unit) {
-    Card(
-        onClick  = onClick,
+private fun ModernGuideCard(entry: GuideEntry, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(18.dp),
-        colors   = CardDefaults.cardColors(containerColor = CardDark)
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.1f))
     ) {
-        Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Box(Modifier.size(80.dp).clip(RoundedCornerShape(12.dp))
-                .background(SurfaceVariantDark)) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(SurfaceVariantDark)
+            ) {
                 if (entry.imageUrls.isNotEmpty()) {
-                    AsyncImage(entry.imageUrls.first(), entry.title,
-                        Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    AsyncImage(
+                        model = entry.imageUrls.first(),
+                        contentDescription = entry.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(entry.category.icon, fontSize = 32.sp)
                     }
                 }
             }
-            Column(Modifier.weight(1f)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(entry.title, style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Surface(shape = RoundedCornerShape(50),
-                        color = GoldDark.copy(alpha = 0.2f)) {
-                        Text(entry.category.icon + " " + entry.category.displayName.split(" ").first(),
-                            Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall, color = GoldPrimary)
-                    }
+            
+            Spacer(Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        entry.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(entry.category.icon, modifier = Modifier.padding(start = 4.dp))
                 }
-                Spacer(Modifier.height(3.dp))
-                Text(entry.summary.take(80) + if (entry.summary.length > 80) "…" else "",
+                
+                Text(
+                    entry.summary,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.65f), maxLines = 2)
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (entry.distanceFromHotelKm > 0) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Icon(Icons.Default.LocationOn, null, Modifier.size(12.dp), tint = GoldPrimary)
-                            Text("${entry.distanceFromHotelKm} km",
-                                style = MaterialTheme.typography.labelSmall, color = GoldPrimary)
-                        }
-                    }
-                    if (entry.openingHours.isNotBlank()) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Icon(Icons.Default.Schedule, null, Modifier.size(12.dp),
-                                tint = MaterialTheme.colorScheme.onSurface.copy(0.4f))
-                            Text(entry.openingHours.take(16),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
-                        }
-                    }
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Spacer(Modifier.height(8.dp))
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, null, tint = GoldPrimary, modifier = Modifier.size(14.dp))
+                    Text(
+                        "${entry.distanceFromHotelKm} km · ",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = GoldPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        entry.category.displayName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
                 }
             }
         }

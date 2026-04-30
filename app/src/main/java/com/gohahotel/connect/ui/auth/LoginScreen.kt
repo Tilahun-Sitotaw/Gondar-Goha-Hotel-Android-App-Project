@@ -56,44 +56,41 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Increased spacer to ensure logo is fully visible and not hidden by status bar
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(50.dp))
 
-            // Brand Header
+            // Professional Compact Logo
             Surface(
-                modifier = Modifier.size(64.dp),
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.size(50.dp),
+                shape = RoundedCornerShape(12.dp),
                 color = GoldPrimary,
-                shadowElevation = 8.dp
+                shadowElevation = 6.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("G", color = SurfaceDark, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("G", color = SurfaceDark, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
                 }
             }
 
+            Spacer(Modifier.height(10.dp))
+            Text("GOHA HOTEL", style = MaterialTheme.typography.titleMedium,
+                color = GoldPrimary, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+
             Spacer(Modifier.height(16.dp))
-            Text("GOHA HOTEL", style = MaterialTheme.typography.titleLarge,
-                color = GoldPrimary, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
-            Text("GONDAR · ETHIOPIA", style = MaterialTheme.typography.labelSmall,
-                color = GoldLight.copy(alpha = 0.5f), letterSpacing = 1.sp)
 
-            Spacer(Modifier.height(24.dp))
-
-            // Main Auth Card
+            // Main Auth Card - Ultra Compact
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                colors = CardDefaults.cardColors(containerColor = CardDark.copy(alpha = 0.9f))
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = CardDark.copy(alpha = 0.95f))
             ) {
-                Column(Modifier.padding(20.dp)) {
+                Column(Modifier.padding(16.dp)) {
                     Text(
                         if (isRegisterMode) "Create Account" else "Welcome Back",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleLarge,
                         color = OnSurfaceDark,
                         fontWeight = FontWeight.Bold
                     )
                     
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     val textFieldColors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = OnSurfaceDark,
@@ -113,37 +110,37 @@ fun LoginScreen(
                             OutlinedTextField(
                                 value = displayName,
                                 onValueChange = { displayName = it },
-                                label = { Text("Full Name") },
-                                leadingIcon = { Icon(Icons.Default.Person, null, modifier = Modifier.size(20.dp)) },
+                                label = { Text("Full Name", fontSize = 12.sp) },
+                                leadingIcon = { Icon(Icons.Default.Person, null, modifier = Modifier.size(18.dp)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 singleLine = true,
                                 colors = textFieldColors
                             )
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(6.dp))
                             OutlinedTextField(
                                 value = phoneNumber,
                                 onValueChange = { phoneNumber = it },
-                                label = { Text("Phone Number") },
-                                leadingIcon = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(20.dp)) },
+                                label = { Text("Phone Number", fontSize = 12.sp) },
+                                leadingIcon = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(18.dp)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 colors = textFieldColors
                             )
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(6.dp))
                             OutlinedTextField(
                                 value = address,
                                 onValueChange = { address = it },
-                                label = { Text("Physical Address") },
-                                leadingIcon = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(20.dp)) },
+                                label = { Text("Physical Address", fontSize = 12.sp) },
+                                leadingIcon = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(18.dp)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 singleLine = true,
                                 colors = textFieldColors
                             )
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(6.dp))
                         }
                     }
 
@@ -151,56 +148,56 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email Address") },
-                        leadingIcon = { Icon(Icons.Default.Email, null, modifier = Modifier.size(20.dp)) },
+                        label = { Text("Email Address", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Email, null, modifier = Modifier.size(18.dp)) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         colors = textFieldColors
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
 
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Password") },
-                        leadingIcon = { Icon(Icons.Default.Lock, null, modifier = Modifier.size(20.dp)) },
+                        label = { Text("Password", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Lock, null, modifier = Modifier.size(18.dp)) },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    null, tint = GoldLight.copy(alpha = 0.5f)
+                                    null, tint = GoldLight.copy(alpha = 0.5f), modifier = Modifier.size(18.dp)
                                 )
                             }
                         },
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         singleLine = true,
                         colors = textFieldColors
                     )
 
                     if (!isRegisterMode) {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                            TextButton(onClick = { viewModel.resetPassword(email.trim()) }) {
-                                Text("Forgot Password?", color = GoldPrimary, style = MaterialTheme.typography.labelMedium)
+                            TextButton(onClick = { viewModel.resetPassword(email.trim()) }, contentPadding = PaddingValues(0.dp)) {
+                                Text("Forgot Password?", color = GoldLight, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
 
                     AnimatedVisibility(isRegisterMode) {
                         Column {
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(6.dp))
                             OutlinedTextField(
                                 value = confirmPassword,
                                 onValueChange = { confirmPassword = it },
-                                label = { Text("Confirm Password") },
-                                leadingIcon = { Icon(Icons.Default.LockClock, null, modifier = Modifier.size(20.dp)) },
+                                label = { Text("Confirm Password", fontSize = 12.sp) },
+                                leadingIcon = { Icon(Icons.Default.LockClock, null, modifier = Modifier.size(18.dp)) },
                                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 singleLine = true,
                                 colors = textFieldColors
                             )
@@ -213,7 +210,7 @@ fun LoginScreen(
                             color = Color.Red,
                             style = MaterialTheme.typography.labelSmall,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                         )
                     }
 
@@ -223,12 +220,13 @@ fun LoginScreen(
                             color = SuccessGreen,
                             style = MaterialTheme.typography.labelSmall,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                         )
                     }
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(16.dp))
 
+                    // Buttons Area
                     Button(
                         onClick = {
                             if (isRegisterMode)
@@ -236,74 +234,83 @@ fun LoginScreen(
                             else
                                 viewModel.login(email.trim(), password)
                         },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
                         enabled = !uiState.isLoading
                     ) {
                         if (uiState.isLoading) {
-                            CircularProgressIndicator(color = SurfaceDark, modifier = Modifier.size(24.dp), strokeWidth = 3.dp)
+                            CircularProgressIndicator(color = SurfaceDark, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
-                            Text(if (isRegisterMode) "CREATE ACCOUNT" else "SIGN IN", color = SurfaceDark, fontWeight = FontWeight.ExtraBold)
+                            Text(if (isRegisterMode) "CREATE ACCOUNT" else "SIGN IN", color = SurfaceDark, fontWeight = FontWeight.Bold)
                         }
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(8.dp))
 
-                    // Authentic Google Login Button
+                    // Google Login
                     Button(
                         onClick = { viewModel.signInWithGoogle() },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 painter = painterResource(id = com.gohahotel.connect.R.drawable.ic_google),
                                 contentDescription = null,
                                 tint = Color.Unspecified,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
-                            Spacer(Modifier.width(12.dp))
-                            Text("Sign in with Google", color = Color(0xFF1F1F1F), fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Google Sign In", color = Color(0xFF1F1F1F), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(8.dp))
+
+                    // Continue as Guest Button
+                    OutlinedButton(
+                        onClick = { viewModel.signInAsGuest() },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.4f))
+                    ) {
+                        Text("CONTINUE AS GUEST", color = GoldPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+
+                    Spacer(Modifier.height(8.dp))
 
                     TextButton(
                         onClick = { isRegisterMode = !isRegisterMode },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            if (isRegisterMode) "Already a member? Sign In" else "New to Goha? Create Account",
+                            if (isRegisterMode) "Already have an account? Sign In" else "New to Goha? Create Account",
                             color = GoldLight.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
             }
             
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // Professional Footer
+            // Footer
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     "High Above the Historic City of Gondar",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = GoldLight.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = GoldLight.copy(alpha = 0.5f),
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                 )
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    repeat(5) {
-                        Icon(Icons.Default.Star, null, tint = GoldPrimary, modifier = Modifier.size(12.dp))
-                    }
+                Row(modifier = Modifier.padding(top = 4.dp)) {
+                    repeat(5) { Icon(Icons.Default.Star, null, tint = GoldPrimary, modifier = Modifier.size(10.dp)) }
                 }
             }
 
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
