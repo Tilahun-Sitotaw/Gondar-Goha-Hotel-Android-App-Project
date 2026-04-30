@@ -1,8 +1,10 @@
 package com.gohahotel.connect.data.repository
 
 import com.gohahotel.connect.domain.model.GuestUser
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -12,7 +14,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
 ) {
     val currentUser: FirebaseUser? get() = auth.currentUser
 
@@ -36,15 +39,31 @@ class AuthRepository @Inject constructor(
     suspend fun registerWithEmail(
         email: String,
         password: String,
-        displayName: String
+        displayName: String,
+        phoneNumber: String,
+        address: String
     ): Result<FirebaseUser> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user!!
+            
+            // 1. Update Firebase Auth Profile
             val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
                 .setDisplayName(displayName)
                 .build()
             user.updateProfile(profileUpdates).await()
+
+            // 2. Save Extended Profile to Firestore
+            val userProfile = hashMapOf(
+                "uid" to user.uid,
+                "displayName" to displayName,
+                "email" to email,
+                "phoneNumber" to phoneNumber,
+                "address" to address,
+                "createdAt" to com.google.firebase.Timestamp.now()
+            )
+            firestore.collection("users").document(user.uid).set(userProfile).await()
+
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
@@ -64,6 +83,31 @@ class AuthRepository @Inject constructor(
         return try {
             auth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun signInWithGoogleCredential(credential: AuthCredential): Result<FirebaseUser> {
+        return try {
+            val result = auth.signInWithCredential(credential).await()
+            val user = result.user!!
+            
+            // Check if user exists in Firestore, if not create
+            val userDoc = firestore.collection("users").document(user.uid).get().await()
+            if (!userDoc.exists()) {
+                val userProfile = hashMapOf(
+                    "uid" to user.uid,
+                    "displayName" to (user.displayName ?: "Google User"),
+                    "email" to (user.email ?: ""),
+                    "phoneNumber" to (user.phoneNumber ?: ""),
+                    "address" to "",
+                    "createdAt" to com.google.firebase.Timestamp.now()
+                )
+                firestore.collection("users").document(user.uid).set(userProfile).await()
+            }
+            
+            Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
         }

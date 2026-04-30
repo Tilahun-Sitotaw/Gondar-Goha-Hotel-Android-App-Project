@@ -1,13 +1,16 @@
 package com.gohahotel.connect.ui.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.gohahotel.connect.core.utils.LocaleHelper
 import com.gohahotel.connect.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,7 +26,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     companion object {
@@ -42,9 +46,10 @@ class SettingsViewModel @Inject constructor(
     private fun loadPreferences() {
         viewModelScope.launch {
             dataStore.data.collect { prefs ->
+                val lang = prefs[KEY_LANGUAGE] ?: "en"
                 _uiState.update {
                     it.copy(
-                        selectedLanguage = prefs[KEY_LANGUAGE] ?: "en",
+                        selectedLanguage = lang,
                         isDarkMode       = (prefs[KEY_DARK_MODE] ?: "true") == "true"
                     )
                 }
@@ -65,6 +70,7 @@ class SettingsViewModel @Inject constructor(
     fun setLanguage(lang: String) {
         viewModelScope.launch {
             dataStore.edit { prefs -> prefs[KEY_LANGUAGE] = lang }
+            LocaleHelper.applyLanguage(context, lang)
             _uiState.update { it.copy(selectedLanguage = lang) }
         }
     }

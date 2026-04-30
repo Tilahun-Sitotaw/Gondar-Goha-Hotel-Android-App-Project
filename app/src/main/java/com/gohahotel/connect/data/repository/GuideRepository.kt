@@ -64,7 +64,10 @@ class GuideRepository @Inject constructor(
                 contentAmharic = "በ1636 ዓ.ም. በንጉሠ ነገሥት ፋሲለደስ የተገነባው የጎንደር ንጉሣዊ ቤተ መንግሥት፣ ከ200 ዓመታት በላይ የኢትዮጵያ ኢምፓየር ማዕከል ሆኖ ያገለገለ አስደናቂ የቤተ መንግሥቶች ስብስብ ነው።",
                 contentFrench = "L'enceinte royale de Gondar, construite par l'Empereur Fasilides en 1636, est un complexe de châteaux et palais qui a servi de centre de l'empire éthiopien pendant plus de 200 ans.",
                 category = GuideCategory.HERITAGE,
-                imageUrls = listOf(),
+                imageUrls = listOf(
+                    "https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=1000", // Representative Castle
+                    "https://images.unsplash.com/photo-1565039320828-e97535b882e0?q=80&w=1000"
+                ),
                 latitude = 12.6030,
                 longitude = 37.4673,
                 distanceFromHotelKm = 1.2,
@@ -84,7 +87,9 @@ class GuideRepository @Inject constructor(
                 contentAmharic = "ደብረ ብርሃን ሥላሴ፣ 'የጽዮን ብርሃን ሥላሴ' ማለት ሲሆን፣ 80 የተሳሉ የቼሩቢም ፊቶች ባሉት ጣሪያ ዝነኛ የሆነ የ17ኛው ክፍለ ዘመን የኢትዮጵያ ኦርቶዶክስ ቤተ ክርስቲያን ነው።",
                 contentFrench = "Debre Berhan Selassie, signifiant 'Trinité de la Lumière de Sion', est une église orthodoxe éthiopienne du 17ème siècle.",
                 category = GuideCategory.CHURCHES,
-                imageUrls = listOf(),
+                imageUrls = listOf(
+                    "https://images.unsplash.com/photo-1590059235ef9-60a6396e95c4?q=80&w=1000" // Church Interior/Vibe
+                ),
                 latitude = 12.6120,
                 longitude = 37.4753,
                 distanceFromHotelKm = 2.1,
@@ -104,7 +109,9 @@ class GuideRepository @Inject constructor(
                 contentAmharic = "በጎሃ ሆቴል ጥግ ላይ የሚገኘው ይህ ኮረብታ በኢትዮጵያ ውስጥ ካሉ በጣም አስደናቂ የፀሐይ ጠለቅ እይታዎች አንዱን ያቀርባል።",
                 contentFrench = "Situé à l'Hôtel Goha, cette colline offre l'une des vues les plus spectaculaires sur le coucher du soleil en Éthiopie.",
                 category = GuideCategory.NATURE,
-                imageUrls = listOf(),
+                imageUrls = listOf(
+                    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1000" // Sunset/Vibe
+                ),
                 latitude = 12.6148,
                 longitude = 37.4720,
                 distanceFromHotelKm = 0.0,

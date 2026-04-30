@@ -60,7 +60,7 @@ class AuthViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            authRepository.registerWithEmail(email, password, displayName)
+            authRepository.registerWithEmail(email, password, displayName, phoneNumber, address)
                 .onSuccess { _uiState.update { it.copy(isLoading = false, isSuccess = true) } }
                 .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
         }
@@ -92,8 +92,12 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signInWithGoogle() {
-        // This typically triggers the Google Identity / One Tap UI
-        _uiState.update { it.copy(error = "Google Sign-In initialized...") }
+    fun signInWithGoogle(credential: com.google.firebase.auth.AuthCredential) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            authRepository.signInWithGoogleCredential(credential)
+                .onSuccess { _uiState.update { it.copy(isLoading = false, isSuccess = true) } }
+                .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+        }
     }
 }
