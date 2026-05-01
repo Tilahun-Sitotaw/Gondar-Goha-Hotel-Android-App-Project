@@ -20,12 +20,14 @@ data class SettingsUiState(
     val isDarkMode: Boolean      = true,
     val guestName: String        = "",
     val guestEmail: String       = "",
+    val userRole: String         = "GUEST",
     val appVersion: String       = "1.0.0"
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val firestoreService: com.gohahotel.connect.data.remote.FirestoreService,
     private val dataStore: DataStore<Preferences>,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -59,11 +61,15 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadUserInfo() {
         val user = authRepository.currentUser
-        _uiState.update {
-            it.copy(
-                guestName  = user?.displayName ?: "Guest",
-                guestEmail = user?.email ?: "Anonymous"
-            )
+        viewModelScope.launch {
+            val role = if (user != null) firestoreService.getUserRole(user.uid) else "GUEST"
+            _uiState.update {
+                it.copy(
+                    guestName  = user?.displayName ?: "Guest",
+                    guestEmail = user?.email ?: "Anonymous",
+                    userRole   = role
+                )
+            }
         }
     }
 

@@ -55,4 +55,7 @@ class RoomRepository @Inject constructor(
             "createdAt"   to System.currentTimeMillis()
         )
     )
+
+    suspend fun saveRoom(room: HotelRoom) = firestoreService.saveRoom(room)
+    suspend fun deleteRoom(roomId: String) = firestoreService.deleteRoom(roomId)
 }

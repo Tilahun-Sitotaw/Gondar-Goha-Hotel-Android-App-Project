@@ -22,6 +22,12 @@ import com.gohahotel.connect.ui.rooms.RoomDetailScreen
 import com.gohahotel.connect.ui.rooms.RoomListScreen
 import com.gohahotel.connect.ui.settings.SettingsScreen
 import com.gohahotel.connect.ui.splash.SplashScreen
+import com.gohahotel.connect.ui.admin.AdminDashboard
+import com.gohahotel.connect.ui.admin.AdminRoomManagement
+import com.gohahotel.connect.ui.admin.AdminPromotionsScreen
+import com.gohahotel.connect.ui.admin.AdminMenuManagement
+import com.gohahotel.connect.ui.admin.AdminOrdersScreen
+import com.gohahotel.connect.ui.admin.AdminUsersScreen
 
 @Composable
 fun GohaNavGraph() {
@@ -71,6 +77,7 @@ fun GohaNavGraph() {
                 onNavigateToGuide      = { navController.navigate(Screen.CulturalGuide.route) },
                 onNavigateToQr         = { navController.navigate(Screen.QrScanner.route) },
                 onNavigateToSettings   = { navController.navigate(Screen.Settings.route) },
+                onNavigateToAdmin      = { navController.navigate(Screen.AdminDashboard.route) },
                 onNavigateToTracking   = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) }
             )
         }
@@ -158,13 +165,47 @@ fun GohaNavGraph() {
         // ── Settings ──────────────────────────────────────────────────────────
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onBack    = { navController.popBackStack() },
-                onLogout  = {
+                onBack            = { navController.popBackStack() },
+                onLogout          = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToAdmin = { navController.navigate(Screen.AdminDashboard.route) }
             )
         }
+
+        // ── Admin ─────────────────────────────────────────────────────────────
+        composable(Screen.AdminDashboard.route) {
+            AdminDashboard(
+                onNavigateToRooms      = { navController.navigate(Screen.AdminRooms.route) },
+                onNavigateToMenu       = { navController.navigate(Screen.AdminMenu.route) },
+                onNavigateToOrders     = { navController.navigate(Screen.AdminOrders.route) },
+                onNavigateToUsers      = { navController.navigate(Screen.AdminUsers.route) },
+                onNavigateToPromotions = { navController.navigate(Screen.AdminPromotions.route) },
+                onBack                 = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.AdminRooms.route) {
+            AdminRoomManagement(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.AdminPromotions.route) {
+            AdminPromotionsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.AdminMenu.route) {
+            AdminMenuManagement(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.AdminOrders.route) {
+            AdminOrdersScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.AdminUsers.route) {
+            AdminUsersScreen(onBack = { navController.popBackStack() })
+        }
+        // Room/Menu management screens would go here
     }
 }

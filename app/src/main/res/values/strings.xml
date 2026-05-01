@@ -5,6 +5,7 @@
     <string name="app_tagline">Where History Meets the Sky</string>
 
     <!-- Auth -->
+    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com</string>
     <string name="sign_in">Sign In</string>
     <string name="sign_out">Sign Out</string>
     <string name="create_account">Create Account</string>

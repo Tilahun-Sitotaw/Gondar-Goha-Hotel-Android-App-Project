@@ -98,6 +98,9 @@ dependencies {
     implementation(libs.google.ai.generativeai)
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+    implementation(libs.androidx.credentials.core)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.google.id)
 
     // Image Loading
     implementation(libs.coil.compose)
@@ -120,6 +123,10 @@ dependencies {
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
+
+    // Media
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
 
     // Testing
     testImplementation(libs.junit)

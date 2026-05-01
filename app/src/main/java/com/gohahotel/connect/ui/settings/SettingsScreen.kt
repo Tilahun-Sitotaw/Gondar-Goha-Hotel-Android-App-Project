@@ -25,7 +25,8 @@ import java.util.*
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onBack: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToAdmin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -77,6 +78,31 @@ fun SettingsScreen(
             }
 
             Spacer(Modifier.height(16.dp))
+
+            // Admin Access
+            if (uiState.userRole == "ADMIN") {
+                SectionHeader("🛠️ Administration")
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape    = RoundedCornerShape(18.dp),
+                    colors   = CardDefaults.cardColors(containerColor = GoldPrimary.copy(alpha = 0.15f)),
+                    onClick  = onNavigateToAdmin
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.AdminPanelSettings, null, tint = GoldPrimary)
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Admin Dashboard", fontWeight = FontWeight.Bold, color = GoldPrimary)
+                            Text("Manage rooms, menu and system", style = MaterialTheme.typography.labelSmall, color = GoldPrimary.copy(alpha = 0.7f))
+                        }
+                        Icon(Icons.Default.ArrowForwardIos, null, Modifier.size(14.dp), tint = GoldPrimary)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
 
             // Language section
             SectionHeader("🌍 Language")

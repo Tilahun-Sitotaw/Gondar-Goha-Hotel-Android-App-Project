@@ -22,8 +22,15 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.GoogleAuthProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gohahotel.connect.ui.theme.*
+import com.gohahotel.connect.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -31,6 +38,9 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val credentialManager = remember { CredentialManager.create(context) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -250,7 +260,28 @@ fun LoginScreen(
 
                     // Google Login
                     Button(
-                        onClick = { viewModel.signInWithGoogle() },
+                        onClick = {
+                            coroutineScope.launch {
+                                try {
+                                    val googleIdOption = GetGoogleIdOption.Builder()
+                                        .setFilterByAuthorizedAccounts(false)
+                                        .setServerClientId(context.getString(R.string.default_web_client_id))
+                                        .build()
+
+                                    val request = GetCredentialRequest.Builder()
+                                        .addCredentialOption(googleIdOption)
+                                        .build()
+
+                                    val result = credentialManager.getCredential(context, request)
+                                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
+                                    val googleCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
+                                    
+                                    viewModel.signInWithGoogle(googleCredential)
+                                } catch (e: Exception) {
+                                    // Handle or log error
+                                }
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),

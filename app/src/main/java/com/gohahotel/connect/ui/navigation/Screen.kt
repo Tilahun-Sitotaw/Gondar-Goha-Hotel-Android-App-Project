@@ -36,4 +36,12 @@ sealed class Screen(val route: String) {
 
     // Settings
     object Settings : Screen("settings")
+
+    // Admin
+    object AdminDashboard  : Screen("admin_dashboard")
+    object AdminRooms      : Screen("admin_rooms")
+    object AdminMenu       : Screen("admin_menu")
+    object AdminOrders     : Screen("admin_orders")
+    object AdminUsers      : Screen("admin_users")
+    object AdminPromotions : Screen("admin_promotions")
 }

@@ -60,6 +60,7 @@ class AuthRepository @Inject constructor(
                 "email" to email,
                 "phoneNumber" to phoneNumber,
                 "address" to address,
+                "role" to if (email.lowercase().trim() == "tilaunsitotaw87@gmail.com") "ADMIN" else "GUEST",
                 "createdAt" to com.google.firebase.Timestamp.now()
             )
             firestore.collection("users").document(user.uid).set(userProfile).await()
@@ -95,13 +96,15 @@ class AuthRepository @Inject constructor(
             
             // Check if user exists in Firestore, if not create
             val userDoc = firestore.collection("users").document(user.uid).get().await()
+            val email = user.email ?: ""
             if (!userDoc.exists()) {
                 val userProfile = hashMapOf(
                     "uid" to user.uid,
                     "displayName" to (user.displayName ?: "Google User"),
-                    "email" to (user.email ?: ""),
+                    "email" to email,
                     "phoneNumber" to (user.phoneNumber ?: ""),
                     "address" to "",
+                    "role" to if (email.lowercase().trim() == "tilaunsitotaw87@gmail.com") "ADMIN" else "GUEST",
                     "createdAt" to com.google.firebase.Timestamp.now()
                 )
                 firestore.collection("users").document(user.uid).set(userProfile).await()

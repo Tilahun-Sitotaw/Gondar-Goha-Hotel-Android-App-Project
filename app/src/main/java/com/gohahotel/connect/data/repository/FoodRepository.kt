@@ -63,6 +63,9 @@ class FoodRepository @Inject constructor(
     suspend fun updateLocalOrderStatus(orderId: String, status: OrderStatus) {
         orderDao.updateOrderStatus(orderId, status.name)
     }
+
+    suspend fun saveMenuItem(item: MenuItem) = firestoreService.saveMenuItem(item)
+    suspend fun deleteMenuItem(itemId: String) = firestoreService.deleteMenuItem(itemId)
 }
 
 // ─── Order mappers (kept here to avoid circular imports) ──────────────────────

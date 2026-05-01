@@ -19,11 +19,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.gohahotel.connect.domain.model.Promotion
+import com.gohahotel.connect.domain.model.PromotionType
+import com.gohahotel.connect.ui.components.VideoPlayer
 import com.gohahotel.connect.ui.theme.*
 
 @Composable
@@ -35,6 +40,7 @@ fun HomeScreen(
     onNavigateToGuide: () -> Unit,
     onNavigateToQr: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToAdmin: () -> Unit,
     onNavigateToTracking: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -86,6 +92,14 @@ fun HomeScreen(
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (uiState.userRole == "ADMIN") {
+                            IconButton(
+                                onClick = onNavigateToAdmin,
+                                modifier = Modifier.background(GoldPrimary.copy(0.15f), CircleShape)
+                            ) {
+                                Icon(Icons.Default.AdminPanelSettings, "Admin", tint = GoldPrimary)
+                            }
+                        }
                         IconButton(
                             onClick = onNavigateToQr,
                             modifier = Modifier.background(Color.White.copy(0.05f), CircleShape)
@@ -135,7 +149,27 @@ fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(16.dp))
+
+        // ── Daily Events & Promotions ────────────────────────────────────────
+        if (uiState.promotions.isNotEmpty()) {
+            Text(
+                "Events & Highlights",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(uiState.promotions) { promo ->
+                    PromotionCard(promo)
+                }
+            }
+        }
 
         // ── Main Services Grid ────────────────────────────────────────────────
         Text(
@@ -273,6 +307,75 @@ private fun QuickActionChip(label: String, icon: ImageVector, onClick: () -> Uni
             Icon(icon, null, tint = GoldPrimary, modifier = Modifier.size(18.dp))
             Text(label, style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun PromotionCard(promo: Promotion) {
+    Surface(
+        modifier = Modifier
+            .width(280.dp)
+            .height(160.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = CardDark,
+        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.1f))
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (promo.type == PromotionType.VIDEO && promo.videoUrl.isNotBlank()) {
+                VideoPlayer(videoUrl = promo.videoUrl)
+            } else {
+                AsyncImage(
+                    model = promo.imageUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp))
+                )
+            }
+            
+            // Overlay gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                            startY = 100f
+                        )
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+            ) {
+                Surface(
+                    color = GoldPrimary,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = promo.type.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = promo.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = promo.description,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.7f),
+                    maxLines = 1
+                )
+            }
         }
     }
 }
