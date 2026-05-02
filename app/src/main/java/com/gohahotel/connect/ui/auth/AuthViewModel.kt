@@ -14,7 +14,8 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
     val error: String?     = null,
-    val message: String?   = null
+    val message: String?   = null,
+    val isAdmin: Boolean   = false
 )
 
 @HiltViewModel
@@ -33,7 +34,10 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             authRepository.signInWithEmail(email, password)
-                .onSuccess { _uiState.update { it.copy(isLoading = false, isSuccess = true) } }
+                .onSuccess { 
+                    val isAdmin = email.trim().lowercase() == "tilahunsitotaw87@gmail.com"
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true, isAdmin = isAdmin) } 
+                }
                 .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
         }
     }

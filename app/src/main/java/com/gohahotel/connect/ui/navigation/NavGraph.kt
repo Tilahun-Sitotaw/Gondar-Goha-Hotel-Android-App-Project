@@ -28,6 +28,7 @@ import com.gohahotel.connect.ui.admin.AdminPromotionsScreen
 import com.gohahotel.connect.ui.admin.AdminMenuManagement
 import com.gohahotel.connect.ui.admin.AdminOrdersScreen
 import com.gohahotel.connect.ui.admin.AdminUsersScreen
+import com.gohahotel.connect.ui.admin.AdminContentManagement
 
 @Composable
 fun GohaNavGraph() {
@@ -60,9 +61,15 @@ fun GohaNavGraph() {
         // ── Auth ─────────────────────────────────────────────────────────────
         composable(Screen.Login.route) {
             LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                onLoginSuccess = { isAdmin ->
+                    if (isAdmin) {
+                        navController.navigate(Screen.AdminDashboard.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
                     }
                 }
             )
@@ -183,6 +190,7 @@ fun GohaNavGraph() {
                 onNavigateToOrders     = { navController.navigate(Screen.AdminOrders.route) },
                 onNavigateToUsers      = { navController.navigate(Screen.AdminUsers.route) },
                 onNavigateToPromotions = { navController.navigate(Screen.AdminPromotions.route) },
+                onNavigateToContent    = { navController.navigate(Screen.AdminContent.route) },
                 onBack                 = { navController.popBackStack() }
             )
         }
@@ -205,6 +213,10 @@ fun GohaNavGraph() {
 
         composable(Screen.AdminUsers.route) {
             AdminUsersScreen(onBack = { navController.popBackStack() })
+        }
+        
+        composable(Screen.AdminContent.route) {
+            AdminContentManagement(onBack = { navController.popBackStack() })
         }
         // Room/Menu management screens would go here
     }

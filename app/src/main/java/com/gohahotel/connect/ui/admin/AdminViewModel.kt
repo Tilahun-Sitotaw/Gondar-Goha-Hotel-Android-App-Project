@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,6 +30,9 @@ class AdminViewModel @Inject constructor(
 
     private val _rooms = MutableStateFlow<List<HotelRoom>>(emptyList())
     val rooms: StateFlow<List<HotelRoom>> = _rooms.asStateFlow()
+
+    private val _guideEntries = MutableStateFlow<List<com.gohahotel.connect.domain.model.GuideEntry>>(emptyList())
+    val guideEntries: StateFlow<List<com.gohahotel.connect.domain.model.GuideEntry>> = _guideEntries.asStateFlow()
 
     private val _promotions = MutableStateFlow<List<Promotion>>(emptyList())
     val promotions: StateFlow<List<Promotion>> = _promotions.asStateFlow()
@@ -60,6 +64,7 @@ class AdminViewModel @Inject constructor(
         fetchUsers()
         fetchMenuItems()
         fetchRooms()
+        fetchGuideEntries()
     }
 
     fun fetchRooms() {
@@ -110,6 +115,35 @@ class AdminViewModel @Inject constructor(
             try {
                 foodRepository.deleteMenuItem(itemId)
                 fetchMenuItems()
+            } catch (e: Exception) {}
+        }
+    }
+
+    fun fetchGuideEntries() {
+        viewModelScope.launch {
+            try {
+                _guideEntries.value = firestoreService.fetchGuideEntries()
+            } catch (e: Exception) {}
+        }
+    }
+
+    fun saveGuideEntry(entry: com.gohahotel.connect.domain.model.GuideEntry) {
+        viewModelScope.launch {
+            try {
+                // Assuming firestoreService has saveGuideEntry or similar
+                // If not, I'll add it.
+                val id = entry.id.ifBlank { com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("guide").document().id }
+                com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("guide").document(id).set(entry.copy(id = id)).await()
+                fetchGuideEntries()
+            } catch (e: Exception) {}
+        }
+    }
+
+    fun deleteGuideEntry(id: String) {
+        viewModelScope.launch {
+            try {
+                com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("guide").document(id).delete().await()
+                fetchGuideEntries()
             } catch (e: Exception) {}
         }
     }

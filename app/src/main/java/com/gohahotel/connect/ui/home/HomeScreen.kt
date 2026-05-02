@@ -48,17 +48,19 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(TealDark, SurfaceDark, Color(0xFF0A1114)),
+                    startY = 0f,
+                    endY = 2000f
+                )
+            )
             .verticalScroll(rememberScrollState())
     ) {
-        // ── Luxury Hero Header ────────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(280.dp)
-                .background(
-                    Brush.verticalGradient(listOf(TealDark, SurfaceDark, SurfaceDark))
-                )
         ) {
             // Subtle texture/light effect
             Box(
@@ -266,8 +268,8 @@ private fun ServiceCard(item: ServiceItem) {
         onClick = item.onClick,
         modifier = Modifier.fillMaxWidth().height(140.dp),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shadowElevation = 2.dp
+        color = CardDark.copy(alpha = 0.6f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(20.dp),

@@ -36,14 +36,22 @@ fun CulturalGuideScreen(
     val uiState by viewModel.uiState.collectAsState()
     val categories = listOf(null) + GuideCategory.entries.toList()
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(
+            Brush.verticalGradient(
+                colors = listOf(TealDark, SurfaceDark, Color(0xFF0A1114)),
+                startY = 0f,
+                endY = 2000f
+            )
+        )
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // ── Modern Parallax-style Header ──────────────────────────────────────
+            // ── Modern Header ──────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-                    .background(Brush.verticalGradient(listOf(TealDark, SurfaceDark)))
             ) {
                 Column(
                     modifier = Modifier
@@ -80,9 +88,9 @@ fun CulturalGuideScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 8.dp,
-                    shadowElevation = 4.dp
+                    color = CardDark.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                    shadowElevation = 0.dp
                 ) {
                     TextField(
                         value = uiState.searchQuery,
@@ -111,8 +119,8 @@ fun CulturalGuideScreen(
                         Surface(
                             onClick = { viewModel.selectCategory(cat) },
                             shape = RoundedCornerShape(50),
-                            color = if (isSelected) GoldPrimary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            border = if (!isSelected) BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.2f)) else null
+                            color = if (isSelected) GoldPrimary else CardDark.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, if (isSelected) GoldPrimary else Color.White.copy(alpha = 0.05f))
                         ) {
                             Text(
                                 text = if (cat == null) "All" else "${cat.icon} ${cat.displayName}",
@@ -156,8 +164,23 @@ fun CulturalGuideScreen(
                     }
                 }
 
-                items(uiState.entries) { entry ->
-                    ModernGuideCard(entry = entry, onClick = { onEntryClick(entry.id) })
+                if (uiState.entries.isEmpty() && uiState.nearbyEntries.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "No experiences available right now. Check back later!",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                } else {
+                    items(uiState.entries) { entry ->
+                        ModernGuideCard(entry = entry, onClick = { onEntryClick(entry.id) })
+                    }
                 }
             }
         }
@@ -226,8 +249,8 @@ private fun ModernGuideCard(entry: GuideEntry, onClick: () -> Unit) {
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.1f))
+        color = CardDark.copy(alpha = 0.6f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Row(
             modifier = Modifier.padding(12.dp),

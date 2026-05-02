@@ -22,25 +22,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.gohahotel.connect.domain.model.HotelRoom
-import com.gohahotel.connect.domain.model.RoomType
+import com.gohahotel.connect.domain.model.GuideCategory
+import com.gohahotel.connect.domain.model.GuideEntry
 import com.gohahotel.connect.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminRoomManagement(
+fun AdminContentManagement(
     viewModel: AdminViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
-    val rooms by viewModel.rooms.collectAsState()
+    val guideEntries by viewModel.guideEntries.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-
-    var editingRoom by remember { mutableStateOf<HotelRoom?>(null) }
+    var editingEntry by remember { mutableStateOf<GuideEntry?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Room Management") },
+                title = { Text("Content & Experiences") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
@@ -57,40 +56,40 @@ fun AdminRoomManagement(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(rooms) { room ->
-                AdminRoomItem(
-                    room = room,
-                    onEdit = { editingRoom = room },
-                    onDelete = { viewModel.deleteRoom(room.id) }
+            items(guideEntries) { entry ->
+                AdminContentItem(
+                    entry = entry,
+                    onEdit = { editingEntry = entry },
+                    onDelete = { viewModel.deleteGuideEntry(entry.id) }
                 )
             }
         }
     }
 
     if (showAddDialog) {
-        AddRoomDialog(
+        AddContentDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { newRoom ->
-                viewModel.saveRoom(newRoom)
+            onConfirm = { newEntry ->
+                viewModel.saveGuideEntry(newEntry)
                 showAddDialog = false
             }
         )
     }
 
-    if (editingRoom != null) {
-        AddRoomDialog(
-            roomToEdit = editingRoom,
-            onDismiss = { editingRoom = null },
-            onConfirm = { updatedRoom ->
-                viewModel.saveRoom(updatedRoom)
-                editingRoom = null
+    if (editingEntry != null) {
+        AddContentDialog(
+            entryToEdit = editingEntry,
+            onDismiss = { editingEntry = null },
+            onConfirm = { updatedEntry ->
+                viewModel.saveGuideEntry(updatedEntry)
+                editingEntry = null
             }
         )
     }
 }
 
 @Composable
-private fun AdminRoomItem(room: HotelRoom, onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun AdminContentItem(entry: GuideEntry, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onEdit() },
         shape = RoundedCornerShape(16.dp),
@@ -101,16 +100,15 @@ private fun AdminRoomItem(room: HotelRoom, onEdit: () -> Unit, onDelete: () -> U
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = room.imageUrls.firstOrNull(),
+                model = entry.imageUrls.firstOrNull(),
                 contentDescription = null,
                 modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Room ${room.name}", fontWeight = FontWeight.Bold, color = GoldPrimary)
-                Text(room.type.displayName, style = MaterialTheme.typography.bodySmall, color = OnSurfaceDark.copy(alpha = 0.6f))
-                Text("${room.pricePerNight} ${room.currency} / night", style = MaterialTheme.typography.labelSmall, color = GoldPrimary.copy(alpha = 0.8f))
+                Text(entry.title, fontWeight = FontWeight.Bold, color = GoldPrimary)
+                Text(entry.category.displayName, style = MaterialTheme.typography.bodySmall, color = OnSurfaceDark.copy(alpha = 0.6f))
             }
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, null, tint = GoldLight)
@@ -123,22 +121,21 @@ private fun AdminRoomItem(room: HotelRoom, onEdit: () -> Unit, onDelete: () -> U
 }
 
 @Composable
-fun AddRoomDialog(
+fun AddContentDialog(
     viewModel: AdminViewModel = hiltViewModel(),
-    roomToEdit: HotelRoom? = null,
+    entryToEdit: GuideEntry? = null,
     onDismiss: () -> Unit,
-    onConfirm: (HotelRoom) -> Unit
+    onConfirm: (GuideEntry) -> Unit
 ) {
-    var name by remember { mutableStateOf(roomToEdit?.name ?: "") }
-    var price by remember { mutableStateOf(roomToEdit?.pricePerNight?.toString() ?: "") }
-    var description by remember { mutableStateOf(roomToEdit?.description ?: "") }
-    var type by remember { mutableStateOf(roomToEdit?.type ?: RoomType.STANDARD) }
-    var imageUrls by remember { mutableStateOf<List<String>>(roomToEdit?.imageUrls ?: emptyList()) }
+    var title by remember { mutableStateOf(entryToEdit?.title ?: "") }
+    var summary by remember { mutableStateOf(entryToEdit?.summary ?: "") }
+    var category by remember { mutableStateOf(entryToEdit?.category ?: GuideCategory.HERITAGE) }
+    var imageUrls by remember { mutableStateOf<List<String>>(entryToEdit?.imageUrls ?: emptyList()) }
     var expanded by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
-            viewModel.uploadImage(it, "rooms") { url ->
+            viewModel.uploadImage(it, "guide") { url ->
                 imageUrls = imageUrls + url
             }
         }
@@ -146,26 +143,25 @@ fun AddRoomDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (roomToEdit == null) "Add New Room" else "Edit Room") },
+        title = { Text(if (entryToEdit == null) "Add New Experience" else "Edit Experience") },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Room Number/Name") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Price per Night") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title (e.g., Sunset Experience)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = summary, onValueChange = { summary = it }, label = { Text("Summary/Description") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
                 
                 Box {
                     OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Type: ${type.displayName}")
+                        Text("Category: ${category.displayName}")
                     }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        RoomType.entries.forEach { roomType ->
+                        GuideCategory.entries.forEach { guideCategory ->
                             DropdownMenuItem(
-                                text = { Text(roomType.displayName) },
+                                text = { Text(guideCategory.displayName) },
                                 onClick = {
-                                    type = roomType
+                                    category = guideCategory
                                     expanded = false
                                 }
                             )
@@ -173,7 +169,7 @@ fun AddRoomDialog(
                     }
                 }
 
-                Text("Room Images", style = MaterialTheme.typography.labelMedium)
+                Text("Images", style = MaterialTheme.typography.labelMedium)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -209,15 +205,14 @@ fun AddRoomDialog(
         },
         confirmButton = {
             Button(onClick = { 
-                onConfirm((roomToEdit ?: HotelRoom()).copy(
-                    name = name, 
-                    pricePerNight = price.toDoubleOrNull() ?: 0.0, 
-                    description = description,
-                    type = type,
+                onConfirm((entryToEdit ?: GuideEntry()).copy(
+                    title = title, 
+                    summary = summary,
+                    category = category,
                     imageUrls = imageUrls
                 )) 
             }) {
-                Text(if (roomToEdit == null) "Add" else "Update")
+                Text(if (entryToEdit == null) "Add" else "Update")
             }
         },
         dismissButton = {

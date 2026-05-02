@@ -11,8 +11,10 @@ import com.gohahotel.connect.ui.navigation.GohaNavGraph
 import com.gohahotel.connect.ui.theme.GohaHotelTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+import androidx.appcompat.app.AppCompatActivity
+
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {

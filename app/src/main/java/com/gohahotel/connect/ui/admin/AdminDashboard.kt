@@ -25,6 +25,7 @@ fun AdminDashboard(
     onNavigateToOrders: () -> Unit,
     onNavigateToUsers: () -> Unit,
     onNavigateToPromotions: () -> Unit,
+    onNavigateToContent: () -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -90,6 +91,14 @@ fun AdminDashboard(
                 icon = Icons.Default.People,
                 color = GoldPrimary,
                 onClick = onNavigateToUsers
+            )
+
+            AdminCard(
+                title = "Content & Experiences",
+                subtitle = "Manage cultural & sunset experiences",
+                icon = Icons.Default.Tour,
+                color = GoldPrimary,
+                onClick = onNavigateToContent
             )
             
             Spacer(Modifier.height(24.dp))

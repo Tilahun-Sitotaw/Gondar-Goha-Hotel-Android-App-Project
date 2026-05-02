@@ -34,6 +34,8 @@ fun AdminMenuManagement(
     val menuItems by viewModel.menuItems.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
+    var editingItem by remember { mutableStateOf<MenuItem?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -55,6 +57,7 @@ fun AdminMenuManagement(
             items(menuItems) { item ->
                 AdminMenuItem(
                     item = item,
+                    onEdit = { editingItem = item },
                     onDelete = { viewModel.deleteMenuItem(item.id) }
                 )
             }
@@ -70,12 +73,23 @@ fun AdminMenuManagement(
             }
         )
     }
+
+    if (editingItem != null) {
+        AddMenuItemDialog(
+            itemToEdit = editingItem,
+            onDismiss = { editingItem = null },
+            onConfirm = { updatedItem ->
+                viewModel.saveMenuItem(updatedItem)
+                editingItem = null
+            }
+        )
+    }
 }
 
 @Composable
-private fun AdminMenuItem(item: MenuItem, onDelete: () -> Unit) {
+private fun AdminMenuItem(item: MenuItem, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onEdit() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardDark)
     ) {
@@ -95,6 +109,9 @@ private fun AdminMenuItem(item: MenuItem, onDelete: () -> Unit) {
                 Text(item.category.displayName, style = MaterialTheme.typography.bodySmall, color = OnSurfaceDark.copy(alpha = 0.6f))
                 Text("${item.price} ${item.currency}", style = MaterialTheme.typography.labelSmall, color = GoldPrimary.copy(alpha = 0.8f))
             }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, null, tint = GoldLight)
+            }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, null, tint = Color.Red.copy(alpha = 0.7f))
             }
@@ -105,13 +122,15 @@ private fun AdminMenuItem(item: MenuItem, onDelete: () -> Unit) {
 @Composable
 fun AddMenuItemDialog(
     viewModel: AdminViewModel = hiltViewModel(),
+    itemToEdit: MenuItem? = null,
     onDismiss: () -> Unit,
     onConfirm: (MenuItem) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf(MenuCategory.ETHIOPIAN) }
-    var imageUrl by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(itemToEdit?.name ?: "") }
+    var price by remember { mutableStateOf(itemToEdit?.price?.toString() ?: "") }
+    var description by remember { mutableStateOf(itemToEdit?.description ?: "") }
+    var category by remember { mutableStateOf(itemToEdit?.category ?: MenuCategory.ETHIOPIAN) }
+    var imageUrl by remember { mutableStateOf(itemToEdit?.imageUrl ?: "") }
     var expanded by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -124,7 +143,7 @@ fun AddMenuItemDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add New Dish") },
+        title = { Text(if (itemToEdit == null) "Add New Dish" else "Edit Dish") },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -132,6 +151,7 @@ fun AddMenuItemDialog(
             ) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Dish Name") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Price") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                 
                 Box {
                     OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
@@ -173,14 +193,15 @@ fun AddMenuItemDialog(
         },
         confirmButton = {
             Button(onClick = { 
-                onConfirm(MenuItem(
+                onConfirm((itemToEdit ?: MenuItem()).copy(
                     name = name, 
                     price = price.toDoubleOrNull() ?: 0.0, 
+                    description = description,
                     category = category,
                     imageUrl = imageUrl
                 )) 
             }) {
-                Text("Add")
+                Text(if (itemToEdit == null) "Add" else "Update")
             }
         },
         dismissButton = {
