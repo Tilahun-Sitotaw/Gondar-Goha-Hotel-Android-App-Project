@@ -3,6 +3,7 @@ package com.gohahotel.connect.data.remote
 import com.gohahotel.connect.domain.model.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -12,7 +13,8 @@ import javax.inject.Singleton
 
 @Singleton
 class FirestoreService @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val storage: FirebaseStorage
 ) {
     // ─── Collections ─────────────────────────────────────────────────────────
     private val roomsCol    get() = firestore.collection("rooms")
@@ -21,6 +23,13 @@ class FirestoreService @Inject constructor(
     private val bookingsCol get() = firestore.collection("bookings")
     private val guideCol    get() = firestore.collection("guide")
     private val usersCol    get() = firestore.collection("users")
+
+    // ─── Storage ─────────────────────────────────────────────────────────────
+    suspend fun uploadFile(uri: android.net.Uri, path: String): String {
+        val ref = storage.reference.child(path)
+        ref.putFile(uri).await()
+        return ref.downloadUrl.await().toString()
+    }
 
     // ─── Rooms ────────────────────────────────────────────────────────────────
     suspend fun fetchRooms(): List<HotelRoom> {
@@ -167,7 +176,7 @@ class FirestoreService @Inject constructor(
             val email = doc.getString("email")?.lowercase()?.trim()
             val role = doc.getString("role")
             
-            if (email == "tilaunsitotaw87@gmail.com" || email == "tilahunsitotaw87@gmail.com") {
+            if (email == "tilahunsitotaw87@gmail.com") {
                 "ADMIN"
             } else {
                 role ?: "GUEST"

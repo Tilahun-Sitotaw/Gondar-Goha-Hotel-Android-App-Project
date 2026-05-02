@@ -1,4 +1,4 @@
-package com.gohahotel.connect.ui.staff
+ package com.gohahotel.connect.ui.staff
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

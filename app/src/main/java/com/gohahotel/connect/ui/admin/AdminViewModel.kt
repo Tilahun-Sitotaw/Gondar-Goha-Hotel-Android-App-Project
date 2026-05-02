@@ -42,6 +42,14 @@ class AdminViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _uploadProgress = MutableStateFlow<Float?>(null)
+    val uploadProgress = _uploadProgress.asStateFlow()
+
+    fun clearError() { _errorMessage.value = null }
+
     init {
         refreshAll()
     }
@@ -177,6 +185,38 @@ class AdminViewModel @Inject constructor(
                 firestoreService.updateUserRole(uid, role)
                 fetchUsers()
             } catch (e: Exception) {}
+        }
+    }
+
+    fun uploadImage(uri: android.net.Uri, folder: String, onSuccess: (String) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            try {
+                val fileName = "img_${System.currentTimeMillis()}.jpg"
+                val url = firestoreService.uploadFile(uri, "$folder/$fileName")
+                onSuccess(url)
+            } catch (e: Exception) {
+                _errorMessage.value = "Image upload failed: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun uploadVideo(uri: android.net.Uri, folder: String, onSuccess: (String) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            try {
+                val fileName = "vid_${System.currentTimeMillis()}.mp4"
+                val url = firestoreService.uploadFile(uri, "$folder/$fileName")
+                onSuccess(url)
+            } catch (e: Exception) {
+                _errorMessage.value = "Video upload failed: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }

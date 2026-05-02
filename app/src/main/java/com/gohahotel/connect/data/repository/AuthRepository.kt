@@ -60,7 +60,7 @@ class AuthRepository @Inject constructor(
                 "email" to email,
                 "phoneNumber" to phoneNumber,
                 "address" to address,
-                "role" to if (email.lowercase().trim() == "tilaunsitotaw87@gmail.com") "ADMIN" else "GUEST",
+                "role" to if (email.lowercase().trim() == "tilahunsitotaw87@gmail.com") "ADMIN" else "GUEST",
                 "createdAt" to com.google.firebase.Timestamp.now()
             )
             firestore.collection("users").document(user.uid).set(userProfile).await()
@@ -104,7 +104,7 @@ class AuthRepository @Inject constructor(
                     "email" to email,
                     "phoneNumber" to (user.phoneNumber ?: ""),
                     "address" to "",
-                    "role" to if (email.lowercase().trim() == "tilaunsitotaw87@gmail.com") "ADMIN" else "GUEST",
+                    "role" to if (email.lowercase().trim() == "tilahunsitotaw87@gmail.com") "ADMIN" else "GUEST",
                     "createdAt" to com.google.firebase.Timestamp.now()
                 )
                 firestore.collection("users").document(user.uid).set(userProfile).await()
