@@ -26,7 +26,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onLogout: () -> Unit,
-    onNavigateToAdmin: () -> Unit
+    onNavigateToAdmin: () -> Unit,
+    onNavigateToStaff: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -99,6 +100,40 @@ fun SettingsScreen(
                             Text("Manage rooms, menu and system", style = MaterialTheme.typography.labelSmall, color = GoldPrimary.copy(alpha = 0.7f))
                         }
                         Icon(Icons.Default.ArrowForwardIos, null, Modifier.size(14.dp), tint = GoldPrimary)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            } else if (uiState.userRole in listOf("STAFF", "KITCHEN", "RECEPTION", "HOUSEKEEPING")) {
+                val title = when (uiState.userRole) {
+                    "KITCHEN" -> "Kitchen Operations"
+                    "RECEPTION" -> "Front Desk & Reception"
+                    "HOUSEKEEPING" -> "Housekeeping"
+                    else -> "Staff Dashboard"
+                }
+                val icon = when (uiState.userRole) {
+                    "KITCHEN" -> Icons.Default.RestaurantMenu
+                    "RECEPTION" -> Icons.Default.Desk
+                    "HOUSEKEEPING" -> Icons.Default.CleaningServices
+                    else -> Icons.Default.Badge
+                }
+                SectionHeader("🛎️ Staff Operations")
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape    = RoundedCornerShape(18.dp),
+                    colors   = CardDefaults.cardColors(containerColor = TealPrimary.copy(alpha = 0.15f)),
+                    onClick  = onNavigateToStaff
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(icon, null, tint = TealPrimary)
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(title, fontWeight = FontWeight.Bold, color = TealLight)
+                            Text("Manage assigned hotel operations", style = MaterialTheme.typography.labelSmall, color = TealLight.copy(alpha = 0.7f))
+                        }
+                        Icon(Icons.Default.ArrowForwardIos, null, Modifier.size(14.dp), tint = TealPrimary)
                     }
                 }
                 Spacer(Modifier.height(16.dp))

@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.gohahotel.connect.domain.model.MenuCategory
 import com.gohahotel.connect.domain.model.MenuItem
 import com.gohahotel.connect.ui.theme.*
@@ -35,18 +37,19 @@ fun MenuScreen(
     val cartTotal = viewModel.cartTotal
 
     Scaffold(
+        containerColor = SurfaceDark,
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("Restaurant", fontWeight = FontWeight.Bold)
+                        Text("Restaurant", fontWeight = FontWeight.Bold, color = OnSurfaceDark)
                         Text("Goha Hotel · Gondar",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
+                            color = OnSurfaceDark.copy(alpha = 0.6f))
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = GoldPrimary) }
                 },
                 actions = {
                     if (cartCount > 0) {
@@ -57,12 +60,12 @@ fun MenuScreen(
                             }
                         }) {
                             IconButton(onClick = onViewCart) {
-                                Icon(Icons.Default.ShoppingCart, "Cart")
+                                Icon(Icons.Default.ShoppingCart, "Cart", tint = GoldPrimary)
                             }
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
             )
         },
         bottomBar = {
@@ -76,7 +79,7 @@ fun MenuScreen(
                         Column {
                             Text("$cartCount item${if (cartCount > 1) "s" else ""} in cart",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onBackground.copy(0.6f))
+                                color = Color.White.copy(0.6f))
                             Text("ETB ${cartTotal.toInt()}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold, color = GoldPrimary)
@@ -184,7 +187,7 @@ fun MenuScreen(
                                     Text("🍽️", fontSize = 48.sp)
                                     Spacer(Modifier.height(8.dp))
                                     Text("No dishes found",
-                                        color = MaterialTheme.colorScheme.onBackground.copy(0.5f))
+                                        color = Color.White.copy(0.5f))
                                 }
                             }
                         }
@@ -205,9 +208,17 @@ private fun FeaturedItemCard(item: MenuItem, onAddToCart: () -> Unit) {
         Column {
             Box(Modifier.fillMaxWidth().height(100.dp)
                 .background(Brush.verticalGradient(listOf(TealDark, SurfaceVariantDark)))) {
-                if (item.imageUrl.isNotBlank()) {
-                    AsyncImage(item.imageUrl, item.name, Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop)
+                val imageUrl = item.allImages.firstOrNull() ?: ""
+                if (imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = item.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("🍛", fontSize = 32.sp)
@@ -217,7 +228,7 @@ private fun FeaturedItemCard(item: MenuItem, onAddToCart: () -> Unit) {
                     Surface(Modifier.align(Alignment.TopStart).padding(4.dp),
                         shape = RoundedCornerShape(50), color = SuccessGreen) {
                         Text("VEG", Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary)
+                            style = MaterialTheme.typography.labelSmall, color = Color.White)
                     }
                 }
             }
@@ -254,9 +265,17 @@ private fun MenuItemCard(
             // Image
             Box(Modifier.size(80.dp).clip(RoundedCornerShape(12.dp))
                 .background(SurfaceVariantDark)) {
-                if (item.imageUrl.isNotBlank()) {
-                    AsyncImage(item.imageUrl, item.name, Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop)
+                val imageUrl = item.allImages.firstOrNull() ?: ""
+                if (imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = item.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("🍽️", fontSize = 28.sp)
@@ -269,12 +288,12 @@ private fun MenuItemCard(
                     fontWeight = FontWeight.Bold)
                 if (item.nameAmharic.isNotBlank()) {
                     Text(item.nameAmharic, style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
+                        color = Color.White.copy(0.5f))
                 }
                 Spacer(Modifier.height(2.dp))
                 Text(item.description.take(60) + if (item.description.length > 60) "…" else "",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.6f), maxLines = 2)
+                    color = Color.White.copy(0.6f), maxLines = 2)
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -286,7 +305,7 @@ private fun MenuItemCard(
                         if (item.prepTimeMinutes > 0) {
                             Text("~${item.prepTimeMinutes} min",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(0.45f))
+                                color = Color.White.copy(0.45f))
                         }
                     }
                     // Quantity controls

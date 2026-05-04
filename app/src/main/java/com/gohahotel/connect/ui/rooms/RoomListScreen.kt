@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.gohahotel.connect.domain.model.HotelRoom
 import com.gohahotel.connect.domain.model.RoomType
 import com.gohahotel.connect.ui.theme.*
@@ -43,7 +45,7 @@ fun RoomListScreen(
                         Text("Browse Rooms", fontWeight = FontWeight.Bold)
                         Text("Goha Hotel · Gondar",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            color = Color.White.copy(alpha = 0.6f))
                     }
                 },
                 navigationIcon = {
@@ -60,6 +62,7 @@ fun RoomListScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0A1424), Color.Black)))
                 .padding(padding)
         ) {
             // ── Filter chips ─────────────────────────────────────────────────
@@ -77,7 +80,14 @@ fun RoomListScreen(
                         } else null,
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = GoldPrimary,
-                            selectedLabelColor     = SurfaceDark
+                            selectedLabelColor     = SurfaceDark,
+                            containerColor         = CardDark,
+                            labelColor             = OnSurfaceDark.copy(alpha = 0.7f)
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            borderColor = GoldPrimary.copy(alpha = 0.3f),
+                            enabled     = true,
+                            selected    = uiState.selectedFilter == filter
                         )
                     )
                 }
@@ -93,7 +103,7 @@ fun RoomListScreen(
                         Icon(Icons.Default.Hotel, null,
                             Modifier.size(64.dp), tint = GoldPrimary.copy(alpha = 0.3f))
                         Spacer(Modifier.height(12.dp))
-                        Text("No rooms available", color = MaterialTheme.colorScheme.onBackground.copy(0.5f))
+                        Text("No rooms available", color = Color.White.copy(0.5f))
                     }
                 }
             } else {
@@ -129,19 +139,54 @@ fun RoomCard(room: HotelRoom, onClick: () -> Unit) {
                         Brush.verticalGradient(listOf(TealDark, SurfaceVariantDark))
                     )
             ) {
-                if (room.imageUrls.isNotEmpty()) {
-                    AsyncImage(
-                        model = room.imageUrls.first(),
-                        contentDescription = room.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Hotel, null,
-                            Modifier.size(64.dp), tint = GoldPrimary.copy(0.4f))
+                    var loadError by remember { mutableStateOf(false) }
+                    val imageUrl = room.allImages.firstOrNull() ?: ""
+                    
+                    if (imageUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(true)
+                                .listener(
+                                    onError = { _, _ -> loadError = true },
+                                    onSuccess = { _, _ -> loadError = false }
+                                )
+                                .build(),
+                            contentDescription = room.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        
+                        if (loadError) {
+                            Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("Load Error", color = Color.Red, style = MaterialTheme.typography.labelSmall)
+                                    Text(imageUrl.take(20) + "...", color = Color.White, fontSize = 8.sp)
+                                }
+                            }
+                        }
+                    } else {
+                        Box(
+                            Modifier.fillMaxSize().background(
+                                Brush.verticalGradient(listOf(TealDark, SurfaceDark))
+                            ), 
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Surface(
+                                    modifier = Modifier.size(64.dp),
+                                    shape = CircleShape,
+                                    color = GoldPrimary.copy(alpha = 0.1f),
+                                    border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.2f))
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("G", color = GoldPrimary, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                Text("No Photo", color = GoldPrimary.copy(0.5f), style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
                     }
-                }
                 // Availability badge
                 Surface(
                     modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
@@ -178,17 +223,17 @@ fun RoomCard(room: HotelRoom, onClick: () -> Unit) {
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(room.name, style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold)
+                            fontWeight = FontWeight.Bold, color = OnSurfaceDark)
                         Text("Floor ${room.floorNumber} · ${room.bedType}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
+                            color = OnSurfaceDark.copy(alpha = 0.7f))
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text("${room.currency} ${room.pricePerNight.toInt()}",
                             style = MaterialTheme.typography.titleMedium,
                             color = GoldPrimary, fontWeight = FontWeight.Bold)
                         Text("/night", style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
+                            color = Color.White.copy(0.5f))
                     }
                 }
 
@@ -223,15 +268,15 @@ fun RoomCard(room: HotelRoom, onClick: () -> Unit) {
                             fontWeight = FontWeight.Bold, color = GoldPrimary)
                         Text("(${room.reviewCount})",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
+                            color = Color.White.copy(0.5f))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Default.People, null,
-                            Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurface.copy(0.5f))
+                            Modifier.size(14.dp), tint = Color.White.copy(0.5f))
                         Text("${room.capacity} guests",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.5f))
+                            color = Color.White.copy(0.5f))
                     }
                 }
             }

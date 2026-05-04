@@ -18,8 +18,12 @@ data class GuideEntry(
     val distanceFromHotelKm: Double = 0.0,
     val openingHours: String = "",
     val entryFee: String = "",
-    val tags: List<String> = emptyList()
-)
+    val tags: List<String> = emptyList(),
+    val imageUrl: String = "" // Legacy support
+) {
+    val allImages: List<String> 
+        get() = (imageUrls + listOf(imageUrl)).filter { it.isNotBlank() }
+}
 
 enum class GuideCategory(val displayName: String, val icon: String) {
     HERITAGE("Heritage Sites", "🏛️"),

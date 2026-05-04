@@ -9,18 +9,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.gohahotel.connect.data.remote.FirestoreService
 
 data class AuthUiState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
     val error: String?     = null,
     val message: String?   = null,
-    val isAdmin: Boolean   = false
+    val userRole: String   = "GUEST",
+    val isOtpSent: Boolean = false,
+    val isResetOtpSent: Boolean = false,
+    val isOtpVerified: Boolean = false,
+    val resetEmail: String = ""
 )
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val firestoreService: FirestoreService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -34,11 +40,39 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             authRepository.signInWithEmail(email, password)
-                .onSuccess { 
-                    val isAdmin = email.trim().lowercase() == "tilahunsitotaw87@gmail.com"
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true, isAdmin = isAdmin) } 
+                .onSuccess { user ->
+                    val role = firestoreService.getUserRole(user.uid)
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true, userRole = role) } 
                 }
                 .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+        }
+    }
+
+    fun startRegistration(email: String, displayName: String) {
+        if (email.isBlank()) {
+            _uiState.update { it.copy(error = "Email is required") }
+            return
+        }
+        if (displayName.isBlank()) {
+            _uiState.update { it.copy(error = "Full Name is required") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            authRepository.sendRegistrationOtp(email, displayName)
+                .onSuccess { _uiState.update { it.copy(isLoading = false, isOtpSent = true, message = "OTP sent to $email") } }
+                .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+        }
+    }
+
+    fun verifyRegistrationOtp(email: String, otp: String) {
+        viewModelScope.launch {
+            val isValid = authRepository.verifyRegistrationOtp(email, otp)
+            if (isValid) {
+                _uiState.update { it.copy(isOtpVerified = true, message = "Email verified successfully") }
+            } else {
+                _uiState.update { it.copy(error = "Invalid OTP") }
+            }
         }
     }
 
@@ -48,7 +82,8 @@ class AuthViewModel @Inject constructor(
         confirmPassword: String,
         displayName: String,
         phoneNumber: String,
-        address: String
+        address: String,
+        otp: String
     ) {
         if (email.isBlank() || password.isBlank() || displayName.isBlank() || phoneNumber.isBlank() || address.isBlank()) {
             _uiState.update { it.copy(error = "Please fill in all fields") }
@@ -58,14 +93,50 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(error = "Passwords do not match") }
             return
         }
-        if (password.length < 6) {
-            _uiState.update { it.copy(error = "Password must be at least 6 characters") }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            if (authRepository.verifyRegistrationOtp(email, otp)) {
+                authRepository.registerWithEmail(email, password, displayName, phoneNumber, address)
+                    .onSuccess { _uiState.update { it.copy(isLoading = false, isSuccess = true) } }
+                    .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+            } else {
+                _uiState.update { it.copy(isLoading = false, error = "Invalid OTP") }
+            }
+        }
+    }
+
+    fun requestPasswordResetOtp(email: String) {
+        if (email.isBlank()) {
+            _uiState.update { it.copy(error = "Please enter your email") }
             return
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            authRepository.registerWithEmail(email, password, displayName, phoneNumber, address)
-                .onSuccess { _uiState.update { it.copy(isLoading = false, isSuccess = true) } }
+            authRepository.sendPasswordResetOtp(email)
+                .onSuccess { 
+                    _uiState.update { it.copy(isLoading = false, isResetOtpSent = true, resetEmail = email, message = "Reset code sent to $email") }
+                }
+                .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+        }
+    }
+
+    fun resetPasswordWithOtp(email: String, otp: String, newPassword: String, confirmPassword: String) {
+        if (newPassword != confirmPassword) {
+            _uiState.update { it.copy(error = "Passwords do not match") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            authRepository.verifyResetOtp(email, otp)
+                .onSuccess { isValid ->
+                    if (isValid) {
+                        authRepository.updatePassword(email, newPassword)
+                            .onSuccess { _uiState.update { it.copy(isLoading = false, message = "Password updated successfully. Please check your email for the final confirmation link.", isResetOtpSent = false) } }
+                            .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, error = "Invalid or expired OTP") }
+                    }
+                }
                 .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
         }
     }

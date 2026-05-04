@@ -21,8 +21,12 @@ data class MenuItem(
     val prepTimeMinutes: Int = 20,
     val customizations: List<String> = emptyList(),
     val isFeatured: Boolean = false,
-    val rating: Float = 0f
-)
+    val rating: Float = 0f,
+    val imageUrls: List<String> = emptyList() // Legacy support
+) {
+    val allImages: List<String> 
+        get() = (imageUrls + listOf(imageUrl)).filter { it.isNotBlank() }
+}
 
 enum class MenuCategory(val displayName: String, val displayNameAmharic: String) {
     ETHIOPIAN("Ethiopian Cuisine", "ኢትዮጵያዊ ምግብ"),

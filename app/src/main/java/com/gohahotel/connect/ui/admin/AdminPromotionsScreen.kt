@@ -22,13 +22,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gohahotel.connect.domain.model.Promotion
 import com.gohahotel.connect.domain.model.PromotionType
 import com.gohahotel.connect.ui.theme.*
@@ -55,13 +58,19 @@ fun AdminPromotionsScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            Text(
-                "Manage Daily Events, Promotions, and Videos",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(16.dp),
-                color = OnSurfaceDark.copy(alpha = 0.6f)
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0A1424), Color.Black)))
+                .padding(padding)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Text(
+                    "Manage Daily Events, Promotions, and Videos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp),
+                    color = GoldPrimary.copy(alpha = 0.6f)
+                )
             
             if (promotions.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -82,6 +91,7 @@ fun AdminPromotionsScreen(
             }
         }
     }
+}
 
     if (showAddDialog) {
         AddPromotionDialog(
@@ -102,13 +112,22 @@ fun PromotionAdminCard(promotion: Promotion, onDelete: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = CardDark)
     ) {
         Column {
-            Box(modifier = Modifier.fillMaxWidth().height(150.dp)) {
-                AsyncImage(
-                    model = promotion.imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+            Box(modifier = Modifier.fillMaxWidth().height(180.dp).background(Color.White.copy(0.05f))) {
+                if (promotion.imageUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(promotion.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Add, null, tint = GoldPrimary.copy(0.2f), modifier = Modifier.size(48.dp))
+                    }
+                }
                 if (promotion.videoUrl.isNotEmpty()) {
                     Icon(
                         Icons.Default.PlayCircle,
@@ -199,16 +218,39 @@ fun AddPromotionDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { 
-                onConfirm(Promotion(
-                    title = title, 
-                    description = description, 
-                    imageUrl = imageUrl, 
-                    videoUrl = videoUrl,
-                    type = type
-                )) 
-            }) {
-                Text("Add")
+            var validationError by remember { mutableStateOf<String?>(null) }
+            
+            LaunchedEffect(imageUrl, title) {
+                validationError = null
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                if (validationError != null) {
+                    Text(validationError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 4.dp))
+                }
+                Button(onClick = { 
+                    if (title.isBlank()) {
+                        validationError = "Title is required"
+                        return@Button
+                    }
+                    if (imageUrl.isBlank() && !viewModel.isLoading.value) {
+                        validationError = "Image is required"
+                        return@Button
+                    }
+                    onConfirm(Promotion(
+                        title = title, 
+                        description = description, 
+                        imageUrl = imageUrl, 
+                        videoUrl = videoUrl,
+                        type = type
+                    )) 
+                }) {
+                    if (viewModel.isLoading.value) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = SurfaceDark, strokeWidth = 2.dp)
+                    } else {
+                        Text("Add Promotion")
+                    }
+                }
             }
         },
         dismissButton = {

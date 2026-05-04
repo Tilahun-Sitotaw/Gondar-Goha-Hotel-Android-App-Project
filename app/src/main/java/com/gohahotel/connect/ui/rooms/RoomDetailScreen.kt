@@ -21,6 +21,8 @@ import com.gohahotel.connect.ui.payment.PaymentViewModel
 import coil.compose.AsyncImage
 import com.gohahotel.connect.ui.theme.*
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
+import coil.request.ImageRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +31,8 @@ fun RoomDetailScreen(
     viewModel: RoomViewModel = hiltViewModel(),
     paymentViewModel: PaymentViewModel = hiltViewModel(),
     onBack: () -> Unit,
-    onInRoomRequest: () -> Unit
+    onInRoomRequest: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val paymentUiState by paymentViewModel.uiState.collectAsState()
@@ -58,8 +61,7 @@ fun RoomDetailScreen(
             showPaymentSheet = false
             room?.let {
                 viewModel.bookRoom(
-                    guestId = "guest", guestName = "Guest",
-                    guestEmail = "", roomId = it.id,
+                    roomId = it.id,
                     roomName = it.name, roomType = it.type.name,
                     checkIn = checkIn, checkOut = checkOut,
                     nights = 1, guests = guests.toIntOrNull() ?: 1,
@@ -104,7 +106,13 @@ fun RoomDetailScreen(
                             Text("Request", color = GoldPrimary)
                         }
                         Button(
-                            onClick = { showBookingDialog = true },
+                            onClick = { 
+                                if (viewModel.isGuest) {
+                                    onNavigateToLogin()
+                                } else {
+                                    showBookingDialog = true 
+                                }
+                            },
                             modifier = Modifier.weight(2f).height(52.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
@@ -139,7 +147,10 @@ fun RoomDetailScreen(
                 ) {
                     if (room.imageUrls.isNotEmpty()) {
                         AsyncImage(
-                            model = room.imageUrls.getOrNull(currentImageIndex) ?: room.imageUrls.first(),
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(room.imageUrls.getOrNull(currentImageIndex) ?: room.imageUrls.first())
+                                .crossfade(true)
+                                .build(),
                             contentDescription = room.name,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()

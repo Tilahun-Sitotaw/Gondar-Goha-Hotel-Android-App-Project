@@ -41,7 +41,8 @@ fun HomeScreen(
     onNavigateToQr: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToAdmin: () -> Unit,
-    onNavigateToTracking: (String) -> Unit
+    onNavigateToTracking: (String) -> Unit,
+    onNavigateToMyOrders: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -83,8 +84,9 @@ fun HomeScreen(
                     Column {
                         Text(
                             text = "Good ${uiState.greeting},",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = GoldLight.copy(alpha = 0.6f)
+                            style = MaterialTheme.typography.titleMedium,
+                            color = GoldPrimary,
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = uiState.guestName,
@@ -159,7 +161,7 @@ fun HomeScreen(
                 "Events & Highlights",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = Color.White,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
 
@@ -178,7 +180,7 @@ fun HomeScreen(
             "Hotel Services",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = Color.White,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
         )
 
@@ -211,7 +213,7 @@ fun HomeScreen(
             "Quick Actions",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = Color.White,
             modifier = Modifier.padding(horizontal = 24.dp)
         )
 
@@ -221,6 +223,7 @@ fun HomeScreen(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item { QuickActionChip("My Orders", Icons.Default.ReceiptLong, onNavigateToMyOrders) }
             item { QuickActionChip("Scan Menu", Icons.Default.QrCodeScanner, onNavigateToQr) }
             item { QuickActionChip("Service", Icons.Default.RoomService, onNavigateToMenu) }
             item { QuickActionChip("Sunset View", Icons.Default.WbSunny) { viewModel.scheduleSunsetAlert() } }
@@ -245,11 +248,10 @@ fun HomeScreen(
                     Icon(Icons.Default.Star, null, tint = GoldPrimary, modifier = Modifier.size(14.dp))
                 }
             }
-            Spacer(Modifier.height(12.dp))
             Text(
                 "© Goha Hotel · Gondar, Ethiopia",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                color = Color.White.copy(alpha = 0.3f)
             )
         }
     }
@@ -287,7 +289,7 @@ private fun ServiceCard(item: ServiceItem) {
                 text = item.label,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White
             )
         }
     }
@@ -298,8 +300,8 @@ private fun QuickActionChip(label: String, icon: ImageVector, onClick: () -> Uni
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.2f))
+        color = CardDark,
+        border = BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
@@ -308,7 +310,7 @@ private fun QuickActionChip(label: String, icon: ImageVector, onClick: () -> Uni
         ) {
             Icon(icon, null, tint = GoldPrimary, modifier = Modifier.size(18.dp))
             Text(label, style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -327,12 +329,22 @@ private fun PromotionCard(promo: Promotion) {
             if (promo.type == PromotionType.VIDEO && promo.videoUrl.isNotBlank()) {
                 VideoPlayer(videoUrl = promo.videoUrl)
             } else {
-                AsyncImage(
-                    model = promo.imageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp))
-                )
+                val imageUrl = promo.allImages.firstOrNull() ?: ""
+                if (imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp))
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(TealDark, SurfaceDark))),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Celebration, null, tint = GoldPrimary.copy(0.2f), modifier = Modifier.size(60.dp))
+                    }
+                }
             }
             
             // Overlay gradient

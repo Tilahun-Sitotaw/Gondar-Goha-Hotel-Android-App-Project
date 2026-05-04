@@ -21,6 +21,7 @@ sealed class Screen(val route: String) {
     object OrderTracking : Screen("order_tracking/{orderId}") {
         fun createRoute(orderId: String) = "order_tracking/$orderId"
     }
+    object GuestOrders   : Screen("guest_orders")
 
     // Digital Concierge
     object Concierge : Screen("concierge")
@@ -45,4 +46,7 @@ sealed class Screen(val route: String) {
     object AdminUsers      : Screen("admin_users")
     object AdminPromotions : Screen("admin_promotions")
     object AdminContent    : Screen("admin_content")
+
+    // Staff
+    object StaffDashboard  : Screen("staff_dashboard")
 }

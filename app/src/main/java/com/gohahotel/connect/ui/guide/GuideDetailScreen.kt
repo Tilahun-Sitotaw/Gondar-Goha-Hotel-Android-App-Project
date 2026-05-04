@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -34,11 +36,12 @@ fun GuideDetailScreen(
     val entry = uiState.selectedEntry
 
     Scaffold(
+        containerColor = SurfaceDark,
         topBar = {
             TopAppBar(
-                title = { Text(entry?.title ?: "Loading...", fontWeight = FontWeight.Bold, maxLines = 1) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                title = { Text(entry?.title ?: "Loading...", fontWeight = FontWeight.Bold, maxLines = 1, color = OnSurfaceDark) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = GoldPrimary) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
             )
         }
     ) { padding ->
@@ -59,8 +62,15 @@ fun GuideDetailScreen(
                         .background(Brush.verticalGradient(listOf(TealDark, SurfaceVariantDark)))
                 ) {
                     if (entry.imageUrls.isNotEmpty()) {
-                        AsyncImage(entry.imageUrls.first(), entry.title,
-                            Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(entry.imageUrls.first())
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = entry.title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     } else {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(entry.category.icon, fontSize = 72.sp)
@@ -83,7 +93,7 @@ fun GuideDetailScreen(
 
                     // Title block
                     Text(entry.title, style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold)
+                        fontWeight = FontWeight.Bold, color = OnSurfaceDark)
                     if (entry.titleAmharic.isNotBlank()) {
                         Text(entry.titleAmharic,
                             style = MaterialTheme.typography.titleMedium,
@@ -107,13 +117,13 @@ fun GuideDetailScreen(
 
                     // Summary
                     Text(entry.summary, style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.85f))
+                        color = OnSurfaceDark.copy(alpha = 0.9f))
 
                     // Full content
                     if (entry.content.isNotBlank()) {
                         Text(entry.content,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(0.7f))
+                            color = OnSurfaceDark.copy(alpha = 0.75f))
                     }
 
                     // Amharic content
@@ -126,13 +136,13 @@ fun GuideDetailScreen(
                                 Spacer(Modifier.height(4.dp))
                                 Text(entry.summaryAmharic,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(0.75f))
+                                    color = OnSurfaceDark.copy(alpha = 0.8f))
                             }
                         }
                     }
 
                     // Interactive Map
-                    Text("Location", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Location", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = OnSurfaceDark)
                     Card(
                         modifier = Modifier.fillMaxWidth().height(200.dp),
                         shape = RoundedCornerShape(14.dp),

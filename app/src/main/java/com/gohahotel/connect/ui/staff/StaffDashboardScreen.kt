@@ -35,8 +35,14 @@ fun StaffDashboardScreen(
 
     Scaffold(
         topBar = {
+            val title = when (uiState.userRole) {
+                "KITCHEN" -> "Kitchen Operations"
+                "RECEPTION" -> "Front Desk & Reception"
+                "HOUSEKEEPING" -> "Housekeeping"
+                else -> "Staff Dashboard"
+            }
             TopAppBar(
-                title = { Text("Hotel Management", fontWeight = FontWeight.Bold) },
+                title = { Text(title, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
                 },
@@ -45,36 +51,63 @@ fun StaffDashboardScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
             )
+        },
+        floatingActionButton = {
+            if (uiState.userRole == "RECEPTION" && uiState.selectedTab == 0) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                FloatingActionButton(
+                    onClick = { 
+                        android.widget.Toast.makeText(context, "Walk-in Guest Registration coming soon!", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    containerColor = GoldPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Register Walk-in Guest", tint = SurfaceDark)
+                }
+            }
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            TabRow(
-                selectedTabIndex = uiState.selectedTab,
-                containerColor = SurfaceDark,
-                contentColor = GoldPrimary,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab]),
-                        color = GoldPrimary
-                    )
+            when (uiState.userRole) {
+                "KITCHEN" -> {
+                    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                        ActiveOrdersList(uiState.orders, viewModel::updateOrderStatus)
+                    }
                 }
-            ) {
-                Tab(
-                    selected = uiState.selectedTab == 0,
-                    onClick = { viewModel.selectTab(0) },
-                    text = { Text("Active Orders (${uiState.orders.size})") }
-                )
-                Tab(
-                    selected = uiState.selectedTab == 1,
-                    onClick = { viewModel.selectTab(1) },
-                    text = { Text("Bookings (${uiState.bookings.size})") }
-                )
-            }
+                "HOUSEKEEPING" -> {
+                    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                        EmptyState("All rooms are currently clean.", Icons.Default.CleaningServices)
+                    }
+                }
+                else -> { // RECEPTION or STAFF or ADMIN
+                    TabRow(
+                        selectedTabIndex = uiState.selectedTab,
+                        containerColor = SurfaceDark,
+                        contentColor = GoldPrimary,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.Indicator(
+                                modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab]),
+                                color = GoldPrimary
+                            )
+                        }
+                    ) {
+                        Tab(
+                            selected = uiState.selectedTab == 0,
+                            onClick = { viewModel.selectTab(0) },
+                            text = { Text("Bookings (${uiState.bookings.size})") }
+                        )
+                        Tab(
+                            selected = uiState.selectedTab == 1,
+                            onClick = { viewModel.selectTab(1) },
+                            text = { Text("Active Orders (${uiState.orders.size})") }
+                        )
+                    }
 
-            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-                when (uiState.selectedTab) {
-                    0 -> ActiveOrdersList(uiState.orders, viewModel::updateOrderStatus)
-                    1 -> BookingsList(uiState.bookings)
+                    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+                        when (uiState.selectedTab) {
+                            0 -> BookingsList(uiState.bookings)
+                            1 -> ActiveOrdersList(uiState.orders, viewModel::updateOrderStatus)
+                        }
+                    }
                 }
             }
         }

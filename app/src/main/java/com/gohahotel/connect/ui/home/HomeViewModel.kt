@@ -58,7 +58,7 @@ class HomeViewModel @Inject constructor(
             viewModelScope.launch {
                 var role = firestoreService.getUserRole(uid)
                 // Force ADMIN role for this specific email (case-insensitive)
-                if (email?.lowercase()?.trim() == "tytilahunsitotaw87@gmail.com") {
+                if (email?.lowercase()?.trim() == "gohahotel34@gmail.com") {
                     role = "ADMIN"
                 }
                 _uiState.update { it.copy(userRole = role) }

@@ -81,7 +81,7 @@ fun OrderTrackingScreen(
                     OrderStatus.PREPARING -> StatusPreparing
                     OrderStatus.ON_THE_WAY -> StatusOnWay
                     OrderStatus.DELIVERED -> StatusDelivered
-                    else -> MaterialTheme.colorScheme.onBackground
+                    else -> Color.White
                 }
             )
 
@@ -89,7 +89,7 @@ fun OrderTrackingScreen(
                 Text(
                     "Estimated: ~${order?.estimatedDeliveryMinutes ?: 30} minutes",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground.copy(0.6f)
+                    color = Color.White.copy(0.6f)
                 )
             }
 
@@ -133,7 +133,7 @@ fun OrderTrackingScreen(
                                         },
                                         contentDescription = step.displayName,
                                         tint = if (isDone || isActive) Color.White
-                                               else MaterialTheme.colorScheme.onSurface.copy(0.3f),
+                                               else Color.White.copy(0.3f),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -159,13 +159,13 @@ fun OrderTrackingScreen(
                                     color = when {
                                         isDone   -> SuccessGreen
                                         isActive -> GoldPrimary
-                                        else     -> MaterialTheme.colorScheme.onSurface.copy(0.4f)
+                                        else     -> Color.White.copy(0.4f)
                                     }
                                 )
                                 Text(
                                     step.displayNameAmharic,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(0.4f)
+                                    color = Color.White.copy(0.4f)
                                 )
                                 if (index < steps.lastIndex) Spacer(Modifier.height(20.dp))
                             }
@@ -189,7 +189,7 @@ fun OrderTrackingScreen(
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("${item.quantity}× ${item.menuItemName}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(0.8f))
+                                    color = Color.White.copy(0.8f))
                                 Text("ETB ${item.subtotal.toInt()}",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium)
@@ -197,7 +197,7 @@ fun OrderTrackingScreen(
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Total", fontWeight = FontWeight.Bold)
+                            Text("Total", fontWeight = FontWeight.Bold, color = Color.White)
                             Text("ETB ${order.totalAmount.toInt()}",
                                 fontWeight = FontWeight.Bold, color = GoldPrimary)
                         }

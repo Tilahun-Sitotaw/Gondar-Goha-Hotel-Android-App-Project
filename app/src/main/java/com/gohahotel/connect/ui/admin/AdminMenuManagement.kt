@@ -10,17 +10,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gohahotel.connect.domain.model.MenuItem
 import com.gohahotel.connect.domain.model.MenuCategory
 import com.gohahotel.connect.ui.theme.*
@@ -40,20 +44,30 @@ fun AdminMenuManagement(
         topBar = {
             TopAppBar(
                 title = { Text("Menu Management", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = GoldPrimary) } },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
                         Icon(Icons.Default.Add, null, tint = GoldPrimary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = SurfaceDark,
+                    titleContentColor = GoldPrimary
+                )
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0A1424), Color.Black)))
+                .padding(padding)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             items(menuItems) { item ->
                 AdminMenuItem(
                     item = item,
@@ -63,6 +77,7 @@ fun AdminMenuManagement(
             }
         }
     }
+}
 
     if (showAddDialog) {
         AddMenuItemDialog(
@@ -94,15 +109,30 @@ private fun AdminMenuItem(item: MenuItem, onEdit: () -> Unit, onDelete: () -> Un
         colors = CardDefaults.cardColors(containerColor = CardDark)
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = null,
-                modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            if (item.imageUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp).clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(60.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White.copy(0.05f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.List, null, tint = GoldPrimary.copy(0.3f))
+                    }
+                }
+            }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.name, fontWeight = FontWeight.Bold, color = GoldPrimary)
@@ -189,19 +219,55 @@ fun AddMenuItemDialog(
                     Spacer(Modifier.width(8.dp))
                     Text(if (imageUrl.isEmpty()) "Upload Image" else "Change Image")
                 }
+
+                if (imageUrl.isNotEmpty()) {
+                    Text("✅ Photo attached", color = SuccessGreen, style = MaterialTheme.typography.labelSmall)
+                } else if (viewModel.isLoading.value) {
+                    Text("⏳ Uploading...", color = GoldPrimary, style = MaterialTheme.typography.labelSmall)
+                }
             }
         },
         confirmButton = {
-            Button(onClick = { 
-                onConfirm((itemToEdit ?: MenuItem()).copy(
-                    name = name, 
-                    price = price.toDoubleOrNull() ?: 0.0, 
-                    description = description,
-                    category = category,
-                    imageUrl = imageUrl
-                )) 
-            }) {
-                Text(if (itemToEdit == null) "Add" else "Update")
+            var validationError by remember { mutableStateOf<String?>(null) }
+            
+            LaunchedEffect(imageUrl, name, price) {
+                validationError = null
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                if (validationError != null) {
+                    Text(validationError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 4.dp))
+                }
+                Button(onClick = { 
+                    if (name.isBlank()) {
+                        validationError = "Dish name is required"
+                        return@Button
+                    }
+                    val priceVal = price.toDoubleOrNull()
+                    if (priceVal == null || priceVal <= 0) {
+                        validationError = "Valid price is required"
+                        return@Button
+                    }
+                    if (imageUrl.isBlank() && !viewModel.isLoading.value) {
+                        validationError = "Image is required"
+                        return@Button
+                    }
+                    
+                    onConfirm((itemToEdit ?: MenuItem()).copy(
+                        name = name, 
+                        price = priceVal, 
+                        description = description,
+                        category = category,
+                        imageUrl = imageUrl
+                    )) 
+                }
+                ) {
+                    if (viewModel.isLoading.value) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = SurfaceDark, strokeWidth = 2.dp)
+                    } else {
+                        Text(if (itemToEdit == null) "Add Dish" else "Update Dish")
+                    }
+                }
             }
         },
         dismissButton = {

@@ -12,12 +12,16 @@ data class HotelRoom(
     val floorNumber: Int = 1,
     val amenities: List<String> = emptyList(),
     val imageUrls: List<String> = emptyList(),
+    val imageUrl: String = "", // Legacy support
     val isAvailable: Boolean = true,
     val rating: Float = 0f,
     val reviewCount: Int = 0,
     val hasView: Boolean = false,
     val hasMountainView: Boolean = false
-)
+) {
+    val allImages: List<String> 
+        get() = (imageUrls + listOf(imageUrl)).filter { it.isNotBlank() }
+}
 
 enum class RoomType(val displayName: String) {
     STANDARD("Standard"),

@@ -34,12 +34,16 @@ guava = "33.3.1-android"
 mockk = "1.13.12"
 kotlinxCoroutinesTest = "1.8.1"
 media3 = "1.4.1"
+jakartaMail = "1.6.7"
+activation = "1.1.1"
 
 [libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+jakarta-mail = { group = "com.sun.mail", name = "android-mail", version.ref = "jakartaMail" }
+jakarta-activation = { group = "com.sun.mail", name = "android-activation", version.ref = "activation" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }

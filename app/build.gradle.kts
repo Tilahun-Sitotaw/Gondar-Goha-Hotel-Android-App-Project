@@ -51,6 +51,8 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/LICENSE.md"
         }
     }
 }
@@ -128,6 +130,10 @@ dependencies {
     // Media
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
+
+    // Email / OTP
+    implementation(libs.jakarta.mail)
+    implementation(libs.jakarta.activation)
 
     // Testing
     testImplementation(libs.junit)

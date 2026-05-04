@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import com.gohahotel.connect.domain.model.GuideCategory
 import com.gohahotel.connect.domain.model.GuideEntry
 import com.gohahotel.connect.ui.theme.*
@@ -159,7 +161,7 @@ fun CulturalGuideScreen(
                             "All Attractions",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = Color.White
                         )
                     }
                 }
@@ -173,7 +175,7 @@ fun CulturalGuideScreen(
                             Text(
                                 "No experiences available right now. Check back later!",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                color = Color.White.copy(alpha = 0.5f)
                             )
                         }
                     }
@@ -196,9 +198,13 @@ private fun FeaturedGuideCard(entry: GuideEntry, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            if (entry.imageUrls.isNotEmpty()) {
+            val imageUrl = entry.allImages.firstOrNull() ?: ""
+            if (imageUrl.isNotEmpty()) {
                 AsyncImage(
-                    model = entry.imageUrls.first(),
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = entry.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -262,9 +268,13 @@ private fun ModernGuideCard(entry: GuideEntry, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(SurfaceVariantDark)
             ) {
-                if (entry.imageUrls.isNotEmpty()) {
+                val imageUrl = entry.allImages.firstOrNull() ?: ""
+                if (imageUrl.isNotEmpty()) {
                     AsyncImage(
-                        model = entry.imageUrls.first(),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .build(),
                         contentDescription = entry.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -288,7 +298,7 @@ private fun ModernGuideCard(entry: GuideEntry, onClick: () -> Unit) {
                         entry.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = Color.White,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -299,7 +309,7 @@ private fun ModernGuideCard(entry: GuideEntry, onClick: () -> Unit) {
                 Text(
                     entry.summary,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    color = Color.White.copy(alpha = 0.6f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -317,7 +327,7 @@ private fun ModernGuideCard(entry: GuideEntry, onClick: () -> Unit) {
                     Text(
                         entry.category.displayName,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        color = Color.White.copy(alpha = 0.7f)
                     )
                 }
             }

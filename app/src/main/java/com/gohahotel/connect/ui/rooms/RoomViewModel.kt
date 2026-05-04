@@ -23,11 +23,14 @@ data class RoomsUiState(
 
 @HiltViewModel
 class RoomViewModel @Inject constructor(
-    private val roomRepository: RoomRepository
+    private val roomRepository: RoomRepository,
+    private val authRepository: com.gohahotel.connect.data.repository.AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoomsUiState())
     val uiState = _uiState.asStateFlow()
+
+    val isGuest: Boolean get() = authRepository.currentUser?.isAnonymous == true
 
     init { loadRooms() }
 
@@ -60,19 +63,24 @@ class RoomViewModel @Inject constructor(
     }
 
     fun bookRoom(
-        guestId: String, guestName: String, guestEmail: String,
+        guestId: String? = null, guestName: String? = null, guestEmail: String? = null,
         roomId: String, roomName: String, roomType: String,
         checkIn: String, checkOut: String, nights: Int, guests: Int,
         totalPrice: Double, specialRequests: String
     ) {
+        val user = authRepository.currentUser
+        val finalGuestId = guestId ?: user?.uid ?: "anonymous"
+        val finalGuestName = guestName ?: user?.displayName ?: "Guest"
+        val finalGuestEmail = guestEmail ?: user?.email ?: ""
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 roomRepository.createBooking(
                     Booking(
-                        guestId        = guestId,
-                        guestName      = guestName,
-                        guestEmail     = guestEmail,
+                        guestId        = finalGuestId,
+                        guestName      = finalGuestName,
+                        guestEmail     = finalGuestEmail,
                         roomId         = roomId,
                         roomName       = roomName,
                         roomType       = roomType,

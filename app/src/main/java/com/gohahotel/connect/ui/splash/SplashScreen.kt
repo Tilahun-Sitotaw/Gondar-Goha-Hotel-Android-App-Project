@@ -33,9 +33,12 @@ import kotlinx.coroutines.delay
 fun SplashScreen(
     viewModel: SplashViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onNavigateToAdmin: () -> Unit,
+    onNavigateToStaff: () -> Unit
 ) {
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+    val userRole by viewModel.userRole.collectAsState()
 
     // ── 3D & Modern Animations ──────────────────────────────────────────────
     val infiniteTransition = rememberInfiniteTransition(label = "3d_rotation")
@@ -75,8 +78,10 @@ fun SplashScreen(
 
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(3500)
-        if (isLoggedIn == true) onNavigateToHome() else onNavigateToLogin()
+        delay(3000)
+        
+        // Always navigate to login first as per user request
+        onNavigateToLogin()
     }
 
     Box(
@@ -150,7 +155,7 @@ fun SplashScreen(
             )
             
             Text(
-                text = "GONDAR · ETHIOPIA",
+                text = "GONDAR . ETHIOPIA",
                 style = MaterialTheme.typography.labelLarge,
                 color = GoldLight.copy(alpha = 0.7f),
                 letterSpacing = 6.sp,

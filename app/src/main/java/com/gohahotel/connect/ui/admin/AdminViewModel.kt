@@ -14,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -51,6 +52,17 @@ class AdminViewModel @Inject constructor(
 
     private val _uploadProgress = MutableStateFlow<Float?>(null)
     val uploadProgress = _uploadProgress.asStateFlow()
+
+    val liveOrdersCount = _orders.map { list ->
+        list.count { it.status != OrderStatus.DELIVERED && it.status != OrderStatus.CANCELLED }
+    }
+
+    val occupancyRate = _rooms.map { list ->
+        if (list.isEmpty()) 0 else {
+            val occupied = list.count { !it.isAvailable }
+            (occupied.toFloat() / list.size * 100).toInt()
+        }
+    }
 
     fun clearError() { _errorMessage.value = null }
 

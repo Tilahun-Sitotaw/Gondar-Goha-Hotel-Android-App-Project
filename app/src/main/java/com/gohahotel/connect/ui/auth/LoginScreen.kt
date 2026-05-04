@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onLoginSuccess: (Boolean) -> Unit
+    onLoginSuccess: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -49,9 +49,19 @@ fun LoginScreen(
     var phoneNumber by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var otpCode by remember { mutableStateOf("") }
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) onLoginSuccess(uiState.isAdmin)
+        if (uiState.isSuccess) onLoginSuccess(uiState.userRole)
+    }
+
+    if (showForgotPasswordDialog) {
+        ForgotPasswordDialog(
+            uiState = uiState,
+            onDismiss = { showForgotPasswordDialog = false },
+            onResetPasswordRequest = { viewModel.resetPassword(it) }
+        )
     }
 
     Box(
@@ -128,6 +138,26 @@ fun LoginScreen(
                                 colors = textFieldColors
                             )
                             Spacer(Modifier.height(6.dp))
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email Address", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Email, null, modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        colors = textFieldColors,
+                        enabled = !uiState.isOtpSent // Lock email once OTP is sent
+                    )
+
+                    Spacer(Modifier.height(6.dp))
+
+                    AnimatedVisibility(isRegisterMode) {
+                        Column {
                             OutlinedTextField(
                                 value = phoneNumber,
                                 onValueChange = { phoneNumber = it },
@@ -140,6 +170,7 @@ fun LoginScreen(
                                 colors = textFieldColors
                             )
                             Spacer(Modifier.height(6.dp))
+
                             OutlinedTextField(
                                 value = address,
                                 onValueChange = { address = it },
@@ -153,21 +184,6 @@ fun LoginScreen(
                             Spacer(Modifier.height(6.dp))
                         }
                     }
-
-                    // Common Fields
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email Address", fontSize = 12.sp) },
-                        leadingIcon = { Icon(Icons.Default.Email, null, modifier = Modifier.size(18.dp)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        colors = textFieldColors
-                    )
-
-                    Spacer(Modifier.height(6.dp))
 
                     OutlinedTextField(
                         value = password,
@@ -191,7 +207,7 @@ fun LoginScreen(
 
                     if (!isRegisterMode) {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                            TextButton(onClick = { viewModel.resetPassword(email.trim()) }, contentPadding = PaddingValues(0.dp)) {
+                            TextButton(onClick = { showForgotPasswordDialog = true }, contentPadding = PaddingValues(0.dp)) {
                                 Text("Forgot Password?", color = GoldLight, style = MaterialTheme.typography.labelSmall)
                             }
                         }
@@ -211,6 +227,41 @@ fun LoginScreen(
                                 singleLine = true,
                                 colors = textFieldColors
                             )
+                        }
+                    }
+
+                    AnimatedVisibility(isRegisterMode && uiState.isOtpSent) {
+                        Column {
+                            Spacer(Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = otpCode,
+                                onValueChange = { otpCode = it },
+                                label = { Text("Enter OTP Code Here", fontSize = 14.sp) },
+                                leadingIcon = { Icon(Icons.Default.VerifiedUser, null, tint = GoldPrimary, modifier = Modifier.size(20.dp)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = GoldPrimary,
+                                    unfocusedBorderColor = GoldPrimary.copy(alpha = 0.5f),
+                                    focusedContainerColor = GoldPrimary.copy(alpha = 0.1f),
+                                    unfocusedContainerColor = GoldPrimary.copy(alpha = 0.1f)
+                                )
+                            )
+                            
+                            // Resend OTP Button
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(
+                                    onClick = { viewModel.startRegistration(email.trim(), displayName.trim()) },
+                                    enabled = !uiState.isLoading
+                                ) {
+                                    Text("Didn't receive code? Resend", color = GoldPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
                         }
                     }
 
@@ -239,20 +290,32 @@ fun LoginScreen(
                     // Buttons Area
                     Button(
                         onClick = {
-                            if (isRegisterMode)
-                                viewModel.register(email.trim(), password, confirmPassword, displayName.trim(), phoneNumber.trim(), address.trim())
-                            else
+                            if (isRegisterMode) {
+                                if (!uiState.isOtpSent) {
+                                    viewModel.startRegistration(email.trim(), displayName.trim())
+                                } else {
+                                    viewModel.register(email.trim(), password, confirmPassword, displayName.trim(), phoneNumber.trim(), address.trim(), otpCode.trim())
+                                }
+                            } else {
                                 viewModel.login(email.trim(), password)
+                            }
                         },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
-                        enabled = !uiState.isLoading
+                        enabled = !uiState.isLoading && (
+                            !isRegisterMode || (!uiState.isOtpSent) || (uiState.isOtpSent && otpCode.isNotBlank())
+                        )
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(color = SurfaceDark, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
-                            Text(if (isRegisterMode) "CREATE ACCOUNT" else "SIGN IN", color = SurfaceDark, fontWeight = FontWeight.Bold)
+                            Text(
+                                if (isRegisterMode) {
+                                    if (!uiState.isOtpSent) "CONTINUE TO VERIFY" else "VERIFY & CREATE"
+                                } else "LOGIN",
+                                color = SurfaceDark, fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
@@ -342,6 +405,98 @@ fun LoginScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun ForgotPasswordDialog(
+    uiState: AuthUiState,
+    onDismiss: () -> Unit,
+    onResetPasswordRequest: (String) -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = CardDark),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = GoldPrimary,
+                    modifier = Modifier.size(48.dp).padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "Reset Password",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = GoldPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Enter your registered email address and we will send you a secure link to reset your password.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = OnSurfaceDark.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(24.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email Address") },
+                    leadingIcon = { Icon(Icons.Default.Email, null, tint = GoldPrimary.copy(alpha = 0.7f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = OnSurfaceDark,
+                        unfocusedTextColor = OnSurfaceDark,
+                        focusedBorderColor = GoldPrimary,
+                        unfocusedBorderColor = GoldLight.copy(alpha = 0.2f),
+                        focusedContainerColor = GoldPrimary.copy(alpha = 0.05f),
+                        unfocusedContainerColor = Color.Transparent
+                    )
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                if (uiState.error != null) {
+                    Text(uiState.error, color = Color.Red, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(8.dp))
+                }
+                if (uiState.message != null) {
+                    Text(uiState.message, color = SuccessGreen, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(8.dp))
+                }
+
+                Button(
+                    onClick = { onResetPasswordRequest(email.trim()) },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = SurfaceDark, strokeWidth = 2.dp)
+                    } else {
+                        Text("Send Reset Link", color = SurfaceDark, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (uiState.message != null) "Close" else "Cancel", color = GoldLight)
+                }
+            }
         }
     }
 }

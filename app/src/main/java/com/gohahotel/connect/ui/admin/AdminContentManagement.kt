@@ -11,17 +11,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gohahotel.connect.domain.model.GuideCategory
 import com.gohahotel.connect.domain.model.GuideEntry
 import com.gohahotel.connect.ui.theme.*
@@ -49,13 +53,17 @@ fun AdminContentManagement(
             )
         }
     ) { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0A1424), Color.Black)))
+                .padding(padding)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             items(guideEntries) { entry ->
                 AdminContentItem(
                     entry = entry,
@@ -65,6 +73,7 @@ fun AdminContentManagement(
             }
         }
     }
+}
 
     if (showAddDialog) {
         AddContentDialog(
@@ -96,15 +105,31 @@ private fun AdminContentItem(entry: GuideEntry, onEdit: () -> Unit, onDelete: ()
         colors = CardDefaults.cardColors(containerColor = CardDark)
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = entry.imageUrls.firstOrNull(),
-                contentDescription = null,
-                modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            val img = entry.imageUrls.firstOrNull() ?: ""
+            if (img.isNotEmpty()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(img)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(70.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White.copy(0.05f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Info, null, tint = GoldPrimary.copy(0.3f))
+                    }
+                }
+            }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(entry.title, fontWeight = FontWeight.Bold, color = GoldPrimary)
@@ -204,15 +229,42 @@ fun AddContentDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { 
-                onConfirm((entryToEdit ?: GuideEntry()).copy(
-                    title = title, 
-                    summary = summary,
-                    category = category,
-                    imageUrls = imageUrls
-                )) 
-            }) {
-                Text(if (entryToEdit == null) "Add" else "Update")
+            var validationError by remember { mutableStateOf<String?>(null) }
+            
+            LaunchedEffect(imageUrls.size, title, summary) {
+                validationError = null
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                if (validationError != null) {
+                    Text(validationError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 4.dp))
+                }
+                Button(onClick = { 
+                    if (title.isBlank()) {
+                        validationError = "Title is required"
+                        return@Button
+                    }
+                    if (summary.isBlank()) {
+                        validationError = "Summary is required"
+                        return@Button
+                    }
+                    if (imageUrls.isEmpty() && !viewModel.isLoading.value) {
+                        validationError = "At least one image is required"
+                        return@Button
+                    }
+                    onConfirm((entryToEdit ?: GuideEntry()).copy(
+                        title = title, 
+                        summary = summary,
+                        category = category,
+                        imageUrls = imageUrls
+                    )) 
+                }) {
+                    if (viewModel.isLoading.value) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = SurfaceDark, strokeWidth = 2.dp)
+                    } else {
+                        Text(if (entryToEdit == null) "Add Experience" else "Update Experience")
+                    }
+                }
             }
         },
         dismissButton = {

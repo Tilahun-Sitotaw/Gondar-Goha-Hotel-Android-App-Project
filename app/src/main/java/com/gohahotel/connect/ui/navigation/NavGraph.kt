@@ -13,6 +13,7 @@ import com.gohahotel.connect.ui.concierge.ConciergeScreen
 import com.gohahotel.connect.ui.food.CartScreen
 import com.gohahotel.connect.ui.food.MenuScreen
 import com.gohahotel.connect.ui.food.OrderTrackingScreen
+import com.gohahotel.connect.ui.food.GuestOrdersScreen
 import com.gohahotel.connect.ui.guide.CulturalGuideScreen
 import com.gohahotel.connect.ui.guide.GuideDetailScreen
 import com.gohahotel.connect.ui.home.HomeScreen
@@ -29,6 +30,7 @@ import com.gohahotel.connect.ui.admin.AdminMenuManagement
 import com.gohahotel.connect.ui.admin.AdminOrdersScreen
 import com.gohahotel.connect.ui.admin.AdminUsersScreen
 import com.gohahotel.connect.ui.admin.AdminContentManagement
+import com.gohahotel.connect.ui.staff.StaffDashboardScreen
 
 @Composable
 fun GohaNavGraph() {
@@ -54,6 +56,16 @@ fun GohaNavGraph() {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
+                },
+                onNavigateToAdmin = {
+                    navController.navigate(Screen.AdminDashboard.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToStaff = {
+                    navController.navigate(Screen.StaffDashboard.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -61,14 +73,26 @@ fun GohaNavGraph() {
         // ── Auth ─────────────────────────────────────────────────────────────
         composable(Screen.Login.route) {
             LoginScreen(
-                onLoginSuccess = { isAdmin ->
-                    if (isAdmin) {
-                        navController.navigate(Screen.AdminDashboard.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                onLoginSuccess = { role ->
+                    when (role) {
+                        "ADMIN" -> {
+                            navController.navigate(Screen.AdminDashboard.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
                         }
-                    } else {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                        "STAFF", "KITCHEN", "RECEPTION", "HOUSEKEEPING" -> {
+                            navController.navigate(Screen.StaffDashboard.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                        }
+                        else -> { // GUEST
+                            if (navController.previousBackStackEntry != null) {
+                                navController.popBackStack()
+                            } else {
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(Screen.Login.route) { inclusive = true }
+                                }
+                            }
                         }
                     }
                 }
@@ -85,7 +109,8 @@ fun GohaNavGraph() {
                 onNavigateToQr         = { navController.navigate(Screen.QrScanner.route) },
                 onNavigateToSettings   = { navController.navigate(Screen.Settings.route) },
                 onNavigateToAdmin      = { navController.navigate(Screen.AdminDashboard.route) },
-                onNavigateToTracking   = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) }
+                onNavigateToTracking   = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) },
+                onNavigateToMyOrders   = { navController.navigate(Screen.GuestOrders.route) }
             )
         }
 
@@ -103,7 +128,8 @@ fun GohaNavGraph() {
             RoomDetailScreen(
                 roomId          = it.arguments?.getString("roomId") ?: "",
                 onBack          = { navController.popBackStack() },
-                onInRoomRequest = { navController.navigate(Screen.InRoomRequest.route) }
+                onInRoomRequest = { navController.navigate(Screen.InRoomRequest.route) },
+                onNavigateToLogin = { navController.navigate(Screen.Login.route) }
             )
         }
         composable(Screen.InRoomRequest.route) {
@@ -124,7 +150,8 @@ fun GohaNavGraph() {
                     navController.navigate(Screen.OrderTracking.createRoute(orderId)) {
                         popUpTo(Screen.Cart.route) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToLogin = { navController.navigate(Screen.Login.route) }
             )
         }
         composable(
@@ -136,6 +163,12 @@ fun GohaNavGraph() {
                 onBack  = { navController.navigate(Screen.Home.route) {
                     popUpTo(0) { inclusive = true }
                 }}
+            )
+        }
+        composable(Screen.GuestOrders.route) {
+            GuestOrdersScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToOrder = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) }
             )
         }
 
@@ -178,7 +211,8 @@ fun GohaNavGraph() {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onNavigateToAdmin = { navController.navigate(Screen.AdminDashboard.route) }
+                onNavigateToAdmin = { navController.navigate(Screen.AdminDashboard.route) },
+                onNavigateToStaff = { navController.navigate(Screen.StaffDashboard.route) }
             )
         }
 
@@ -191,7 +225,12 @@ fun GohaNavGraph() {
                 onNavigateToUsers      = { navController.navigate(Screen.AdminUsers.route) },
                 onNavigateToPromotions = { navController.navigate(Screen.AdminPromotions.route) },
                 onNavigateToContent    = { navController.navigate(Screen.AdminContent.route) },
-                onBack                 = { navController.popBackStack() }
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onBack = { navController.navigate(Screen.Home.route) }
             )
         }
 
@@ -218,6 +257,10 @@ fun GohaNavGraph() {
         composable(Screen.AdminContent.route) {
             AdminContentManagement(onBack = { navController.popBackStack() })
         }
-        // Room/Menu management screens would go here
+        
+        // ── Staff ─────────────────────────────────────────────────────────────
+        composable(Screen.StaffDashboard.route) {
+            StaffDashboardScreen(onBack = { navController.popBackStack() })
+        }
     }
 }

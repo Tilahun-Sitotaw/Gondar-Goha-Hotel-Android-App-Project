@@ -12,7 +12,12 @@
           "package_name": "com.gohahotel.connect"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "442557962594-6godgl3g481e9ppsu26rilf7jjkhloba.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBYIkUc7uoLSSeLl2cN9Jzo9qsg6408zqE"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "442557962594-6godgl3g481e9ppsu26rilf7jjkhloba.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +41,20 @@
           "package_name": "com.gohahotel.connect.debug"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "442557962594-7ekiqtjbhs8suvpd5ssh1ao8go6co7is.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gohahotel.connect.debug",
+            "certificate_hash": "0fea10b79c6316ea54ae3c9ef1565dd3bb0451ce"
+          }
+        },
+        {
+          "client_id": "442557962594-6godgl3g481e9ppsu26rilf7jjkhloba.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBYIkUc7uoLSSeLl2cN9Jzo9qsg6408zqE"
@@ -39,7 +62,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "442557962594-6godgl3g481e9ppsu26rilf7jjkhloba.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

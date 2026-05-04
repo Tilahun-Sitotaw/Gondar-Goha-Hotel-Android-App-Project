@@ -23,7 +23,8 @@ fun CartScreen(
     viewModel: FoodViewModel = hiltViewModel(),
     paymentViewModel: PaymentViewModel = hiltViewModel(),
     onBack: () -> Unit,
-    onOrderPlaced: (String) -> Unit
+    onOrderPlaced: (String) -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val paymentUiState by paymentViewModel.uiState.collectAsState()
@@ -41,8 +42,6 @@ fun CartScreen(
             showPaymentSheet = false
             viewModel.placeOrder(
                 roomNumber = roomNumber.ifBlank { "Lobby" },
-                guestId = "guest",
-                guestName = "Valued Guest",
                 instructions = instructions
             )
             paymentViewModel.resetState()
@@ -69,7 +68,13 @@ fun CartScreen(
                         }
                         if (uiState.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = GoldPrimary)
                         Button(
-                            onClick = { showPaymentSheet = true },
+                            onClick = { 
+                                if (viewModel.isGuest) {
+                                    onNavigateToLogin()
+                                } else {
+                                    showPaymentSheet = true 
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth().height(54.dp),
                             shape    = RoundedCornerShape(14.dp),
                             colors   = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
@@ -92,7 +97,7 @@ fun CartScreen(
                     Icon(Icons.Default.ShoppingCart, null,
                         Modifier.size(72.dp), tint = GoldPrimary.copy(0.3f))
                     Text("Your cart is empty", style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(0.5f))
+                        color = Color.White.copy(0.5f))
                     OutlinedButton(onClick = onBack,
                         border = BorderStroke(1.dp, GoldPrimary), shape = RoundedCornerShape(50)) {
                         Text("Browse Menu", color = GoldPrimary)
@@ -115,10 +120,10 @@ fun CartScreen(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(cart.menuItem.name, style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold)
+                                    fontWeight = FontWeight.Bold, color = Color.White)
                                 Text("ETB ${cart.menuItem.price.toInt()} each",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(0.6f))
+                                    color = Color.White.copy(0.6f))
                                 if (cart.customization.isNotBlank()) {
                                     Text("Note: ${cart.customization}",
                                         style = MaterialTheme.typography.labelSmall,

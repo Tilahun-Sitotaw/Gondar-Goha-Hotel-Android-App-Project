@@ -8,8 +8,12 @@ data class Promotion(
     val videoUrl: String = "", // For hotel videos or cultural clips
     val type: PromotionType = PromotionType.EVENT,
     val isActive: Boolean = true,
-    val date: String = "" // For events
-)
+    val date: String = "", // For events
+    val imageUrls: List<String> = emptyList() // Legacy support
+) {
+    val allImages: List<String> 
+        get() = (imageUrls + listOf(imageUrl)).filter { it.isNotBlank() }
+}
 
 enum class PromotionType {
     EVENT, PROMOTION, CULTURAL, VIDEO

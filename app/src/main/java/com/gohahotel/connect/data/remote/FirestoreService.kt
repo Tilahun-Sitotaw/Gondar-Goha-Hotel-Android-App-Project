@@ -176,7 +176,7 @@ class FirestoreService @Inject constructor(
             val email = doc.getString("email")?.lowercase()?.trim()
             val role = doc.getString("role")
             
-            if (email == "tytilahunsitotaw87@gmail.com") {
+            if (email == "gohahotel34@gmail.com") {
                 "ADMIN"
             } else {
                 role ?: "GUEST"

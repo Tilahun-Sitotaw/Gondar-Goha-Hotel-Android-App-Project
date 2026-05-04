@@ -21,16 +21,20 @@ data class FoodUiState(
     val isLoading: Boolean = false,
     val activeOrderId: String? = null,
     val activeOrder: Order? = null,
+    val userOrders: List<Order> = emptyList(),
     val error: String? = null
 )
 
 @HiltViewModel
 class FoodViewModel @Inject constructor(
-    private val foodRepository: FoodRepository
+    private val foodRepository: FoodRepository,
+    private val authRepository: com.gohahotel.connect.data.repository.AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FoodUiState())
     val uiState = _uiState.asStateFlow()
+
+    val isGuest: Boolean get() = authRepository.currentUser?.isAnonymous == true
 
     val cartTotal get() = _uiState.value.cartItems.sumOf { it.menuItem.price * it.quantity }
     val cartCount get() = _uiState.value.cartItems.sumOf { it.quantity }
@@ -51,6 +55,11 @@ class FoodViewModel @Inject constructor(
         }
         viewModelScope.launch {
             try { foodRepository.refreshMenu() } catch (_: Exception) {}
+        }
+        viewModelScope.launch {
+            foodRepository.getRecentOrders().collect { orders ->
+                _uiState.update { it.copy(userOrders = orders) }
+            }
         }
     }
 
@@ -99,7 +108,11 @@ class FoodViewModel @Inject constructor(
 
     fun clearCart() = _uiState.update { it.copy(cartItems = emptyList()) }
 
-    fun placeOrder(roomNumber: String, guestId: String, guestName: String, instructions: String) {
+    fun placeOrder(roomNumber: String, guestId: String? = null, guestName: String? = null, instructions: String) {
+        val user = authRepository.currentUser
+        val finalGuestId = guestId ?: user?.uid ?: "anonymous"
+        val finalGuestName = guestName ?: user?.displayName ?: "Guest"
+        
         val items = _uiState.value.cartItems
         if (items.isEmpty()) return
         viewModelScope.launch {
@@ -117,8 +130,8 @@ class FoodViewModel @Inject constructor(
                 }
                 val orderId = foodRepository.placeOrder(
                     Order(
-                        guestId             = guestId,
-                        guestName           = guestName,
+                        guestId             = finalGuestId,
+                        guestName           = finalGuestName,
                         roomNumber          = roomNumber,
                         items               = orderItems,
                         totalAmount         = cartTotal,
