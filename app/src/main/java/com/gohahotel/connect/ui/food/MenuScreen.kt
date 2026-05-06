@@ -22,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import com.gohahotel.connect.domain.model.MenuCategory
 import com.gohahotel.connect.domain.model.MenuItem
 import com.gohahotel.connect.ui.theme.*
@@ -36,6 +37,7 @@ fun MenuScreen(
     val uiState by viewModel.uiState.collectAsState()
     val cartCount = viewModel.cartCount
     val cartTotal = viewModel.cartTotal
+    val categories = listOf(null) + MenuCategory.values().toList()
 
     Scaffold(
         containerColor = SurfaceDark,
@@ -43,7 +45,7 @@ fun MenuScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Restaurant", fontWeight = FontWeight.Bold, color = OnSurfaceDark)
+                        Text("Restaurant", fontWeight = FontWeight.ExtraBold, color = GoldPrimary)
                         Text("Goha Hotel · Gondar",
                             style = MaterialTheme.typography.labelSmall,
                             color = OnSurfaceDark.copy(alpha = 0.6f))
@@ -71,18 +73,22 @@ fun MenuScreen(
         },
         bottomBar = {
             AnimatedVisibility(cartCount > 0, enter = slideInVertically { it }, exit = slideOutVertically { it }) {
-                Surface(shadowElevation = 8.dp) {
+                Surface(
+                    color = CardDark,
+                    border = BorderStroke(1.dp, GoldPrimary.copy(0.2f)),
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("$cartCount item${if (cartCount > 1) "s" else ""} in cart",
+                            Text("$cartCount item${if (cartCount > 1) "s" else ""} selected",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(0.6f))
                             Text("ETB ${cartTotal.toInt()}",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold, color = GoldPrimary)
                         }
                         Button(
@@ -90,7 +96,7 @@ fun MenuScreen(
                             shape  = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
                         ) {
-                            Text("View Cart", color = SurfaceDark, fontWeight = FontWeight.Bold)
+                            Text("Review Order", color = SurfaceDark, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(6.dp))
                             Icon(Icons.Default.ArrowForward, null, tint = SurfaceDark,
                                 modifier = Modifier.size(16.dp))
@@ -100,47 +106,72 @@ fun MenuScreen(
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-
-            // Search bar
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = viewModel::search,
-                placeholder  = { Text("Search dishes...") },
-                leadingIcon  = { Icon(Icons.Default.Search, null) },
-                trailingIcon = if (uiState.searchQuery.isNotBlank()) {
-                    { IconButton(onClick = { viewModel.search("") }) {
-                        Icon(Icons.Default.Clear, null) } }
-                } else null,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor   = GoldPrimary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(0.4f)
-                )
-            )
-
-            // Category tabs
-            ScrollableTabRow(
-                selectedTabIndex = MenuCategory.values().indexOf(uiState.selectedCategory),
-                edgePadding      = 16.dp,
-                containerColor   = MaterialTheme.colorScheme.background,
-                contentColor     = GoldPrimary,
-                divider          = {}
-            ) {
-                MenuCategory.values().forEach { cat ->
-                    Tab(
-                        selected = uiState.selectedCategory == cat,
-                        onClick  = { viewModel.selectCategory(cat) },
-                        text     = { Text(cat.displayName,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (uiState.selectedCategory == cat) FontWeight.Bold else FontWeight.Normal) }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(SurfaceDark, Color(0xFF0A1114))
                     )
+                )
+        ) {
+
+            // Search bar - Modernized
+            Surface(
+                modifier = Modifier.padding(16.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = CardDark.copy(alpha = 0.6f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+            ) {
+                TextField(
+                    value = uiState.searchQuery,
+                    onValueChange = viewModel::search,
+                    placeholder  = { Text("Search delicious dishes...", color = Color.White.copy(0.4f)) },
+                    leadingIcon  = { Icon(Icons.Default.Search, null, tint = GoldPrimary) },
+                    trailingIcon = if (uiState.searchQuery.isNotBlank()) {
+                        { IconButton(onClick = { viewModel.search("") }) {
+                            Icon(Icons.Default.Clear, null, tint = GoldPrimary) } }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = GoldPrimary,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    )
+                )
+            }
+
+            // Category tabs - Responsive Chips
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                items(categories) { cat ->
+                    val isSelected = uiState.selectedCategory == cat
+                    Surface(
+                        onClick = { viewModel.selectCategory(cat) },
+                        shape = RoundedCornerShape(50),
+                        color = if (isSelected) GoldPrimary else CardDark.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, if (isSelected) GoldPrimary else Color.White.copy(alpha = 0.1f))
+                    ) {
+                        Text(
+                            text = cat?.displayName ?: "All Dishes",
+                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (isSelected) SurfaceDark else Color.White,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                        )
+                    }
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
 
             if (uiState.isLoading && uiState.menuItems.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -149,26 +180,29 @@ fun MenuScreen(
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Featured section
-                    if (uiState.featuredItems.isNotEmpty() && uiState.searchQuery.isBlank()) {
+                    if (uiState.featuredItems.isNotEmpty() && uiState.searchQuery.isBlank() && uiState.selectedCategory == null) {
                         item {
                             Text("⭐ Chef's Recommendations",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(8.dp))
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                items(uiState.featuredItems.take(5)) { item ->
+                                fontWeight = FontWeight.Bold,
+                                color = GoldPrimary)
+                            Spacer(Modifier.height(12.dp))
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                items(uiState.featuredItems) { item ->
                                     FeaturedItemCard(
                                         item      = item,
                                         onAddToCart = { viewModel.addToCart(item) }
                                     )
                                 }
                             }
-                            Spacer(Modifier.height(12.dp))
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.2f))
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(24.dp))
+                            Text("Full Menu",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White)
                         }
                     }
 
@@ -185,14 +219,17 @@ fun MenuScreen(
                         item {
                             Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("🍽️", fontSize = 48.sp)
-                                    Spacer(Modifier.height(8.dp))
-                                    Text("No dishes found",
-                                        color = Color.White.copy(0.5f))
+                                    Icon(Icons.Default.RestaurantMenu, null, modifier = Modifier.size(64.dp), tint = GoldPrimary.copy(0.2f))
+                                    Spacer(Modifier.height(16.dp))
+                                    Text("No dishes found matching your search",
+                                        color = Color.White.copy(0.5f),
+                                        textAlign = TextAlign.Center)
                                 }
                             }
                         }
                     }
+                    
+                    item { Spacer(Modifier.height(80.dp)) }
                 }
             }
         }

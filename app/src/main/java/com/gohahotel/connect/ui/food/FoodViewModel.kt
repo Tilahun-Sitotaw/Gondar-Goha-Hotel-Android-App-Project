@@ -16,7 +16,7 @@ data class FoodUiState(
     val menuItems: List<MenuItem> = emptyList(),
     val featuredItems: List<MenuItem> = emptyList(),
     val cartItems: List<CartItem> = emptyList(),
-    val selectedCategory: MenuCategory = MenuCategory.ETHIOPIAN,
+    val selectedCategory: MenuCategory? = null,
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val activeOrderId: String? = null,
@@ -44,7 +44,7 @@ class FoodViewModel @Inject constructor(
     private fun loadMenu() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            foodRepository.getMenuByCategory(MenuCategory.ETHIOPIAN).collect { items ->
+            foodRepository.getAllMenuItems().collect { items ->
                 _uiState.update { it.copy(menuItems = items, isLoading = false) }
             }
         }
@@ -63,10 +63,15 @@ class FoodViewModel @Inject constructor(
         }
     }
 
-    fun selectCategory(category: MenuCategory) {
+    fun selectCategory(category: MenuCategory?) {
         _uiState.update { it.copy(selectedCategory = category, searchQuery = "") }
         viewModelScope.launch {
-            foodRepository.getMenuByCategory(category).collect { items ->
+            val flow = if (category == null) {
+                foodRepository.getAllMenuItems()
+            } else {
+                foodRepository.getMenuByCategory(category)
+            }
+            flow.collect { items ->
                 _uiState.update { it.copy(menuItems = items) }
             }
         }

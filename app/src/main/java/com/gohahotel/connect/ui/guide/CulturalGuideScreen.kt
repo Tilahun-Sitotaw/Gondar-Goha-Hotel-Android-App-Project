@@ -90,45 +90,51 @@ fun CulturalGuideScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = CardDark.copy(alpha = 0.6f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
-                    shadowElevation = 0.dp
+                    color = CardDark,
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                    shadowElevation = 8.dp
                 ) {
                     TextField(
                         value = uiState.searchQuery,
                         onValueChange = viewModel::search,
-                        placeholder = { Text("Search historic sites, food...") },
+                        placeholder = { Text("Search historic sites, food...", color = Color.White.copy(0.4f)) },
                         leadingIcon = { Icon(Icons.Default.Search, null, tint = GoldPrimary) },
+                        trailingIcon = if (uiState.searchQuery.isNotEmpty()) {
+                            { IconButton(onClick = { viewModel.search("") }) { Icon(Icons.Default.Close, null, tint = GoldPrimary) } }
+                        } else null,
                         modifier = Modifier.fillMaxWidth(),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = GoldPrimary
                         ),
                         singleLine = true
                     )
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp)
+                    contentPadding = PaddingValues(horizontal = 2.dp)
                 ) {
                     items(categories) { cat ->
                         val isSelected = uiState.selectedCategory == cat
                         Surface(
                             onClick = { viewModel.selectCategory(cat) },
                             shape = RoundedCornerShape(50),
-                            color = if (isSelected) GoldPrimary else CardDark.copy(alpha = 0.6f),
-                            border = BorderStroke(1.dp, if (isSelected) GoldPrimary else Color.White.copy(alpha = 0.05f))
+                            color = if (isSelected) GoldPrimary else CardDark,
+                            border = BorderStroke(1.dp, if (isSelected) GoldPrimary else Color.White.copy(alpha = 0.1f))
                         ) {
                             Text(
-                                text = if (cat == null) "All" else "${cat.icon} ${cat.displayName}",
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                text = if (cat == null) "Explore All" else "${cat.icon} ${cat.displayName}",
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                                 style = MaterialTheme.typography.labelLarge,
-                                color = if (isSelected) SurfaceDark else MaterialTheme.colorScheme.onSurface,
+                                color = if (isSelected) SurfaceDark else Color.White,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
                         }

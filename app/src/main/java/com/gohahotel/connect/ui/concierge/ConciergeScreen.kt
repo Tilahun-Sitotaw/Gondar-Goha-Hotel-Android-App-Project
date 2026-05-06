@@ -14,7 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -40,81 +40,95 @@ fun ConciergeScreen(
     }
 
     Scaffold(
+        containerColor = SurfaceDark,
         topBar = {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(40.dp)
                                 .background(
-                                    Brush.radialGradient(listOf(GoldLight, GoldPrimary)),
+                                    Brush.linearGradient(listOf(GoldLight, GoldPrimary)),
                                     CircleShape
                                 ),
                             contentAlignment = Alignment.Center
-                        ) { Text("G", color = SurfaceDark, fontWeight = FontWeight.Bold) }
+                        ) { Text("G", color = SurfaceDark, fontWeight = FontWeight.ExtraBold) }
                         Column {
-                            Text("Digital Concierge", fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium)
-                            Text("Online · 24/7 Assistance",
+                            Text("Goha Concierge", fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium, color = GoldPrimary)
+                            Text("Online · Real-time Support",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = SuccessGreen)
                         }
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back", tint = GoldPrimary) }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
             )
         },
         bottomBar = {
-            Surface(shadowElevation = 4.dp) {
+            Surface(
+                color = CardDark,
+                tonalElevation = 8.dp,
+                border = BorderStroke(1.dp, Color.White.copy(0.05f)),
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedTextField(
+                    TextField(
                         value = uiState.inputText,
                         onValueChange = viewModel::onInputChange,
-                        placeholder = { Text("Ask me anything...") },
+                        placeholder = { Text("Ask about services, tours...", color = Color.White.copy(0.4f)) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(24.dp),
                         maxLines = 4,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                         keyboardActions = KeyboardActions(onSend = { viewModel.sendMessage() }),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor   = GoldPrimary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(0.4f)
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = SurfaceDark,
+                            unfocusedContainerColor = SurfaceDark,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = GoldPrimary
                         )
                     )
                     IconButton(
                         onClick  = viewModel::sendMessage,
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(52.dp)
                             .background(GoldPrimary, CircleShape),
                         enabled  = uiState.inputText.isNotBlank()
                     ) {
                         Icon(Icons.Default.Send, "Send",
-                            tint = SurfaceDark, modifier = Modifier.size(20.dp))
+                            tint = SurfaceDark, modifier = Modifier.size(24.dp))
                     }
                 }
             }
         }
     ) { padding ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 12.dp),
-            contentPadding = PaddingValues(vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0A1114))))
         ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
             items(uiState.messages, key = { it.id }) { msg ->
                 ChatBubble(message = msg)
             }
@@ -162,6 +176,7 @@ fun ConciergeScreen(
             }
         }
     }
+}
 }
 
 private val timeFormatter = SimpleDateFormat("h:mm a", Locale.getDefault())

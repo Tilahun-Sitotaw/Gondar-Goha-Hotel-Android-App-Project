@@ -223,10 +223,10 @@ fun HomeScreen(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item { QuickActionChip("My Orders", Icons.Default.ReceiptLong, onNavigateToMyOrders) }
-            item { QuickActionChip("Scan Menu", Icons.Default.QrCodeScanner, onNavigateToQr) }
-            item { QuickActionChip("Service", Icons.Default.RoomService, onNavigateToMenu) }
-            item { QuickActionChip("Sunset View", Icons.Default.WbSunny) { viewModel.scheduleSunsetAlert() } }
+            item { QuickActionChip("Orders", Icons.Default.ReceiptLong, onNavigateToMyOrders) }
+            item { QuickActionChip("Menu", Icons.Default.RestaurantMenu, onNavigateToMenu) }
+            item { QuickActionChip("Concierge", Icons.Default.SupportAgent, onNavigateToConcierge) }
+            item { QuickActionChip("Guide", Icons.Default.Map, onNavigateToGuide) }
         }
 
         Spacer(Modifier.height(40.dp))
