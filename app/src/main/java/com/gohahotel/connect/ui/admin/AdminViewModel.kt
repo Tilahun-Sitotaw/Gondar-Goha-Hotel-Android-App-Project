@@ -14,7 +14,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -23,7 +26,8 @@ import javax.inject.Inject
 class AdminViewModel @Inject constructor(
     private val firestoreService: FirestoreService,
     private val foodRepository: FoodRepository,
-    private val roomRepository: RoomRepository
+    private val roomRepository: RoomRepository,
+    private val cloudinaryService: com.gohahotel.connect.data.remote.CloudinaryService
 ) : ViewModel() {
 
     private val _menuItems = MutableStateFlow<List<MenuItem>>(emptyList())
@@ -47,11 +51,15 @@ class AdminViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // Separate upload state so it doesn't get clobbered by fetch operations
+    private val _isUploading = MutableStateFlow(false)
+    val isUploading: StateFlow<Boolean> = _isUploading.asStateFlow()
+
+    private val _uploadError = MutableStateFlow<String?>(null)
+    val uploadError: StateFlow<String?> = _uploadError.asStateFlow()
+
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
-    private val _uploadProgress = MutableStateFlow<Float?>(null)
-    val uploadProgress = _uploadProgress.asStateFlow()
 
     val liveOrdersCount = _orders.map { list ->
         list.count { it.status != OrderStatus.DELIVERED && it.status != OrderStatus.CANCELLED }
@@ -175,11 +183,14 @@ class AdminViewModel @Inject constructor(
 
     fun savePromotion(promotion: Promotion) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 firestoreService.savePromotion(promotion)
                 fetchPromotions()
             } catch (e: Exception) {
-                // Handle error
+                _errorMessage.value = "Failed to save event: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -195,22 +206,18 @@ class AdminViewModel @Inject constructor(
     }
 
     fun fetchOrders() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                _orders.value = firestoreService.fetchAllOrders()
-            } catch (e: Exception) {
-            } finally {
-                _isLoading.value = false
-            }
-        }
+        // Start real-time listener — replaces one-shot fetch
+        firestoreService.observeAllOrders()
+            .catch { /* Firestore error — fall back silently */ }
+            .onEach { _orders.value = it }
+            .launchIn(viewModelScope)
     }
 
     fun updateOrderStatus(orderId: String, status: OrderStatus) {
         viewModelScope.launch {
             try {
                 firestoreService.updateOrderStatus(orderId, status.name)
-                fetchOrders()
+                // No need to re-fetch — real-time listener will update automatically
             } catch (e: Exception) {
             }
         }
@@ -236,32 +243,32 @@ class AdminViewModel @Inject constructor(
 
     fun uploadImage(uri: android.net.Uri, folder: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
+            _isUploading.value = true
+            _uploadError.value = null  // clear previous error
             try {
-                val fileName = "img_${System.currentTimeMillis()}.jpg"
-                val url = firestoreService.uploadFile(uri, "$folder/$fileName")
+                val url = cloudinaryService.uploadFile(uri, folder)
                 onSuccess(url)
             } catch (e: Exception) {
+                _uploadError.value = "Upload failed: ${e.message}"
                 _errorMessage.value = "Image upload failed: ${e.message}"
             } finally {
-                _isLoading.value = false
+                _isUploading.value = false
             }
         }
     }
 
     fun uploadVideo(uri: android.net.Uri, folder: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
+            _isUploading.value = true
+            _uploadError.value = null
             try {
-                val fileName = "vid_${System.currentTimeMillis()}.mp4"
-                val url = firestoreService.uploadFile(uri, "$folder/$fileName")
+                val url = cloudinaryService.uploadFile(uri, folder)
                 onSuccess(url)
             } catch (e: Exception) {
+                _uploadError.value = "Upload failed: ${e.message}"
                 _errorMessage.value = "Video upload failed: ${e.message}"
             } finally {
-                _isLoading.value = false
+                _isUploading.value = false
             }
         }
     }

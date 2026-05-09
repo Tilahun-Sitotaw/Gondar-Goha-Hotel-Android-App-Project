@@ -24,8 +24,10 @@ fun InRoomRequestScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentUser = viewModel.currentUser
     var notes by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("") }
+    var roomNumber by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.requestSubmitted) {
         if (uiState.requestSubmitted) {
@@ -127,6 +129,16 @@ fun InRoomRequestScreen(
                 maxLines    = 4
             )
 
+            OutlinedTextField(
+                value = roomNumber,
+                onValueChange = { roomNumber = it },
+                label = { Text("Your Room Number") },
+                leadingIcon = { Icon(Icons.Default.Hotel, null) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp)
+            )
+
             if (uiState.isLoading) LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(), color = GoldPrimary)
 
@@ -134,8 +146,8 @@ fun InRoomRequestScreen(
                 onClick = {
                     if (selectedType.isNotBlank()) {
                         viewModel.submitInRoomRequest(
-                            roomNumber = "101",  // Replace with actual room from session
-                            guestId    = "guest",
+                            roomNumber = roomNumber.ifBlank { "Unknown" },
+                            guestId    = currentUser?.uid ?: "anonymous",
                             type       = selectedType,
                             notes      = notes
                         )

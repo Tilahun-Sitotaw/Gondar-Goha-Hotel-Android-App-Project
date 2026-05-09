@@ -1,19 +1,29 @@
 package com.gohahotel.connect.ui.food
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.gohahotel.connect.ui.payment.PaymentSelectionSheet
 import com.gohahotel.connect.ui.payment.PaymentViewModel
 import com.gohahotel.connect.ui.theme.*
@@ -27,22 +37,28 @@ fun CartScreen(
     onOrderPlaced: (String) -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState       by viewModel.uiState.collectAsState()
     val paymentUiState by paymentViewModel.uiState.collectAsState()
-    
-    var instructions by remember { mutableStateOf("") }
-    var roomNumber   by remember { mutableStateOf("") }
+
+    var instructions     by remember { mutableStateOf("") }
+    var roomNumber       by remember { mutableStateOf("") }
+    var deliveryType     by remember { mutableStateOf(DeliveryType.ROOM) }
     var showPaymentSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.activeOrderId) {
         uiState.activeOrderId?.let { onOrderPlaced(it) }
     }
-    
+
     LaunchedEffect(paymentUiState.paymentSuccess) {
         if (paymentUiState.paymentSuccess) {
             showPaymentSheet = false
             viewModel.placeOrder(
-                roomNumber = roomNumber.ifBlank { "Lobby" },
+                roomNumber   = when (deliveryType) {
+                    DeliveryType.ROOM    -> roomNumber.ifBlank { "Unknown" }
+                    DeliveryType.LOBBY   -> "Lobby"
+                    DeliveryType.POOLSIDE -> "Pool Area"
+                    DeliveryType.TERRACE  -> "Terrace"
+                },
                 instructions = instructions
             )
             paymentViewModel.resetState()
@@ -50,41 +66,86 @@ fun CartScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFF050D18),
         topBar = {
             TopAppBar(
-                title = { Text("Your Cart", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                title = {
+                    Column {
+                        Text("Your Order",
+                            fontWeight = FontWeight.ExtraBold,
+                            color = OnSurfaceDark, fontSize = 18.sp)
+                        if (uiState.cartItems.isNotEmpty()) {
+                            Text("${viewModel.cartCount} items · ETB ${viewModel.cartTotal.toInt()}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = GoldPrimary.copy(0.8f))
+                        }
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = GoldPrimary)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF050D18))
             )
         },
         bottomBar = {
             if (uiState.cartItems.isNotEmpty()) {
-                Surface(shadowElevation = 8.dp) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Total", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text("ETB ${viewModel.cartTotal.toInt()}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold, color = GoldPrimary)
-                        }
-                        if (uiState.isLoading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = GoldPrimary)
-                        Button(
-                            onClick = { 
-                                if (viewModel.isGuest) {
-                                    onNavigateToLogin()
-                                } else {
-                                    showPaymentSheet = true 
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth().height(54.dp),
-                            shape    = RoundedCornerShape(14.dp),
-                            colors   = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
-                            enabled  = !uiState.isLoading
+                Surface(
+                    color = Color(0xFF0A1424),
+                    border = BorderStroke(1.dp, GoldPrimary.copy(0.2f)),
+                    shape  = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // Order summary row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.RestaurantMenu, null, tint = SurfaceDark, modifier = Modifier.size(18.dp))
+                            Column {
+                                Text("Order Total",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = OnSurfaceDark.copy(0.5f))
+                                Text("ETB ${viewModel.cartTotal.toInt()}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold, color = GoldPrimary)
+                            }
+                            // Delivery type badge
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = TealPrimary.copy(0.15f),
+                                border = BorderStroke(1.dp, TealPrimary.copy(0.3f))
+                            ) {
+                                Text("${deliveryType.emoji} ${deliveryType.label}",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TealLight, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        if (uiState.isLoading) {
+                            LinearProgressIndicator(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = GoldPrimary, trackColor = GoldPrimary.copy(0.15f))
+                        }
+
+                        Button(
+                            onClick = {
+                                if (viewModel.isGuest) onNavigateToLogin()
+                                else showPaymentSheet = true
+                            },
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            shape  = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
+                            enabled = !uiState.isLoading
+                        ) {
+                            Icon(Icons.Default.Payment, null,
+                                tint = Color(0xFF050D18), modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Checkout · ETB ${viewModel.cartTotal.toInt()}",
-                                color = SurfaceDark, fontWeight = FontWeight.Bold)
+                            Text("Place Order · ETB ${viewModel.cartTotal.toInt()}",
+                                color = Color(0xFF050D18), fontWeight = FontWeight.ExtraBold)
                         }
                     }
                 }
@@ -92,100 +153,312 @@ fun CartScreen(
         }
     ) { padding ->
         if (uiState.cartItems.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Default.ShoppingCart, null,
-                        Modifier.size(72.dp), tint = GoldPrimary.copy(0.3f))
-                    Text("Your cart is empty", style = MaterialTheme.typography.titleMedium,
-                        color = Color.White.copy(0.5f))
-                    OutlinedButton(onClick = onBack,
-                        border = BorderStroke(1.dp, GoldPrimary), shape = RoundedCornerShape(50)) {
+            // Empty cart
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("🛒", fontSize = 56.sp)
+                    Text("Your cart is empty",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = OnSurfaceDark.copy(0.5f),
+                        fontWeight = FontWeight.Bold)
+                    Text("Add dishes from the menu to get started",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceDark.copy(0.3f),
+                        textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(4.dp))
+                    OutlinedButton(
+                        onClick = onBack,
+                        border = BorderStroke(1.dp, GoldPrimary.copy(0.5f)),
+                        shape  = RoundedCornerShape(50)
+                    ) {
+                        Icon(Icons.Default.Restaurant, null,
+                            tint = GoldPrimary, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
                         Text("Browse Menu", color = GoldPrimary)
                     }
                 }
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Brush.verticalGradient(
+                        listOf(Color(0xFF050D18), Color(0xFF040C14))
+                    )),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // ── Cart items ────────────────────────────────────────────────
+                item {
+                    Text("Order Items",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceDark)
+                }
+
                 items(uiState.cartItems, key = { it.menuItem.id }) { cart ->
-                    Card(shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = CardDark)) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color(0xFF0E1B2A),
+                        border = BorderStroke(1.dp, Color.White.copy(0.06f))
+                    ) {
                         Row(
-                            Modifier.padding(12.dp).fillMaxWidth(),
+                            modifier = Modifier.padding(12.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(cart.menuItem.name, style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold, color = Color.White)
+                            // Dish image
+                            Box(
+                                modifier = Modifier.size(56.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF0A1424))
+                            ) {
+                                val imageUrl = cart.menuItem.allImages.firstOrNull() ?: ""
+                                if (imageUrl.isNotBlank()) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(imageUrl).crossfade(true).build(),
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("🍽️", fontSize = 20.sp)
+                                    }
+                                }
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(cart.menuItem.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = OnSurfaceDark)
                                 Text("ETB ${cart.menuItem.price.toInt()} each",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(0.6f))
+                                    color = OnSurfaceDark.copy(0.5f))
                                 if (cart.customization.isNotBlank()) {
-                                    Text("Note: ${cart.customization}",
+                                    Text("📝 ${cart.customization}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = GoldPrimary.copy(0.8f))
+                                        color = GoldPrimary.copy(0.7f))
                                 }
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                IconButton(onClick = { viewModel.removeFromCart(cart.menuItem) },
-                                    modifier = Modifier.size(28.dp)) {
-                                    Icon(Icons.Default.Remove, null, Modifier.size(16.dp), tint = GoldPrimary)
+
+                            // Qty controls
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                IconButton(
+                                    onClick = { viewModel.removeFromCart(cart.menuItem) },
+                                    modifier = Modifier.size(28.dp)
+                                        .background(Color.White.copy(0.08f), CircleShape)
+                                ) {
+                                    Icon(Icons.Default.Remove, null,
+                                        tint = GoldPrimary, modifier = Modifier.size(13.dp))
                                 }
-                                Text("${cart.quantity}", fontWeight = FontWeight.Bold, color = GoldPrimary)
-                                IconButton(onClick = { viewModel.addToCart(cart.menuItem) },
-                                    modifier = Modifier.size(28.dp)) {
-                                    Icon(Icons.Default.Add, null, Modifier.size(16.dp), tint = GoldPrimary)
+                                Text("${cart.quantity}",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = GoldPrimary, fontSize = 14.sp)
+                                IconButton(
+                                    onClick = { viewModel.addToCart(cart.menuItem) },
+                                    modifier = Modifier.size(28.dp)
+                                        .background(GoldPrimary, CircleShape)
+                                ) {
+                                    Icon(Icons.Default.Add, null,
+                                        tint = Color(0xFF050D18), modifier = Modifier.size(13.dp))
                                 }
                             }
+
+                            // Subtotal
                             Text("ETB ${(cart.menuItem.price * cart.quantity).toInt()}",
-                                fontWeight = FontWeight.Bold, color = GoldPrimary,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = GoldPrimary,
                                 style = MaterialTheme.typography.titleSmall)
                         }
                     }
                 }
 
+                // ── Delivery type selector ────────────────────────────────────
                 item {
-                    OutlinedTextField(
-                        value = roomNumber, onValueChange = { roomNumber = it },
-                        label = { Text("Room Number") }, modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Default.Hotel, null) },
-                        singleLine = true, shape = RoundedCornerShape(14.dp))
-                }
-                item {
-                    OutlinedTextField(
-                        value = instructions, onValueChange = { instructions = it },
-                        label = { Text("Special Instructions (optional)") },
-                        modifier = Modifier.fillMaxWidth().height(90.dp),
-                        maxLines = 3, shape = RoundedCornerShape(14.dp))
-                }
-                item {
-                    TextButton(onClick = viewModel::clearCart, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.Delete, null, tint = ErrorRed, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Clear Cart", color = ErrorRed)
+                    Spacer(Modifier.height(4.dp))
+                    Text("Delivery Location",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = OnSurfaceDark)
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        DeliveryType.entries.forEach { type ->
+                            val selected = deliveryType == type
+                            Surface(
+                                onClick = { deliveryType = type },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (selected) TealPrimary.copy(0.2f) else Color(0xFF0E1B2A),
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (selected) TealPrimary else Color.White.copy(0.08f)
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(10.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(type.emoji, fontSize = 18.sp)
+                                    Spacer(Modifier.height(3.dp))
+                                    Text(type.label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (selected) TealLight else OnSurfaceDark.copy(0.5f),
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                        textAlign = TextAlign.Center)
+                                }
+                            }
+                        }
                     }
                 }
+
+                // Room number field (only for room delivery)
+                if (deliveryType == DeliveryType.ROOM) {
+                    item {
+                        OutlinedTextField(
+                            value = roomNumber,
+                            onValueChange = { roomNumber = it },
+                            label = { Text("Room Number") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Hotel, null,
+                                    tint = GoldPrimary.copy(0.6f), modifier = Modifier.size(18.dp))
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor   = GoldPrimary,
+                                unfocusedBorderColor = Color.White.copy(0.1f),
+                                focusedTextColor     = OnSurfaceDark,
+                                unfocusedTextColor   = OnSurfaceDark,
+                                focusedLabelColor    = GoldPrimary,
+                                cursorColor          = GoldPrimary,
+                                focusedContainerColor   = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent
+                            )
+                        )
+                    }
+                }
+
+                // ── Special instructions ──────────────────────────────────────
+                item {
+                    OutlinedTextField(
+                        value = instructions,
+                        onValueChange = { instructions = it },
+                        label = { Text("Special Instructions (optional)") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Notes, null,
+                                tint = GoldPrimary.copy(0.6f), modifier = Modifier.size(18.dp))
+                        },
+                        placeholder = { Text("Allergies, preferences, extra sauce...",
+                            color = OnSurfaceDark.copy(0.3f)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2, maxLines = 3,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor   = GoldPrimary,
+                            unfocusedBorderColor = Color.White.copy(0.1f),
+                            focusedTextColor     = OnSurfaceDark,
+                            unfocusedTextColor   = OnSurfaceDark,
+                            focusedLabelColor    = GoldPrimary,
+                            cursorColor          = GoldPrimary,
+                            focusedContainerColor   = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        )
+                    )
+                }
+
+                // ── Order summary card ────────────────────────────────────────
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color(0xFF0E1B2A),
+                        border = BorderStroke(1.dp, GoldPrimary.copy(0.15f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("Order Summary",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold, color = OnSurfaceDark)
+                            HorizontalDivider(color = Color.White.copy(0.06f))
+                            uiState.cartItems.forEach { cart ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("${cart.quantity}× ${cart.menuItem.name}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = OnSurfaceDark.copy(0.7f),
+                                        modifier = Modifier.weight(1f))
+                                    Text("ETB ${(cart.menuItem.price * cart.quantity).toInt()}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = OnSurfaceDark.copy(0.7f))
+                                }
+                            }
+                            HorizontalDivider(color = Color.White.copy(0.06f))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Total",
+                                    fontWeight = FontWeight.ExtraBold, color = OnSurfaceDark)
+                                Text("ETB ${viewModel.cartTotal.toInt()}",
+                                    fontWeight = FontWeight.ExtraBold, color = GoldPrimary)
+                            }
+                        }
+                    }
+                }
+
+                // Clear cart
+                item {
+                    TextButton(
+                        onClick = viewModel::clearCart,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.DeleteOutline, null,
+                            tint = ErrorRed.copy(0.7f), modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Clear Cart", color = ErrorRed.copy(0.7f))
+                    }
+                }
+
+                item { Spacer(Modifier.height(100.dp)) }
             }
         }
     }
 
+    // Payment sheet
     if (showPaymentSheet) {
         ModalBottomSheet(
             onDismissRequest = { showPaymentSheet = false },
-            containerColor = SurfaceDark
+            containerColor   = Color(0xFF0A1424),
+            shape            = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
             PaymentSelectionSheet(
-                selectedMethod = paymentUiState.selectedMethod,
+                selectedMethod   = paymentUiState.selectedMethod,
                 onMethodSelected = { paymentViewModel.selectMethod(it) },
+                amount           = viewModel.cartTotal,
+                currency         = "ETB",
                 onConfirm = {
                     paymentViewModel.processPayment(
-                        amount = viewModel.cartTotal,
+                        amount      = viewModel.cartTotal,
                         referenceId = "FOOD-ORDER"
                     )
                 },
@@ -193,4 +466,12 @@ fun CartScreen(
             )
         }
     }
+}
+
+// ── Delivery type enum ────────────────────────────────────────────────────────
+enum class DeliveryType(val label: String, val emoji: String) {
+    ROOM("Room",     "🛏️"),
+    LOBBY("Lobby",   "🏨"),
+    POOLSIDE("Pool", "🏊"),
+    TERRACE("Roof",  "🌄")
 }

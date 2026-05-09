@@ -11,6 +11,7 @@ import com.gohahotel.connect.ui.auth.LoginScreen
 import com.gohahotel.connect.ui.auth.AuthViewModel
 import com.gohahotel.connect.ui.concierge.ConciergeScreen
 import com.gohahotel.connect.ui.food.CartScreen
+import com.gohahotel.connect.ui.food.DishDetailScreen
 import com.gohahotel.connect.ui.food.MenuScreen
 import com.gohahotel.connect.ui.food.OrderTrackingScreen
 import com.gohahotel.connect.ui.food.GuestOrdersScreen
@@ -19,6 +20,7 @@ import com.gohahotel.connect.ui.guide.GuideDetailScreen
 import com.gohahotel.connect.ui.home.HomeScreen
 import com.gohahotel.connect.ui.qr.QrScannerScreen
 import com.gohahotel.connect.ui.rooms.InRoomRequestScreen
+import com.gohahotel.connect.ui.rooms.MyReservationsScreen
 import com.gohahotel.connect.ui.rooms.RoomDetailScreen
 import com.gohahotel.connect.ui.rooms.RoomListScreen
 import com.gohahotel.connect.ui.settings.SettingsScreen
@@ -30,6 +32,9 @@ import com.gohahotel.connect.ui.admin.AdminMenuManagement
 import com.gohahotel.connect.ui.admin.AdminOrdersScreen
 import com.gohahotel.connect.ui.admin.AdminUsersScreen
 import com.gohahotel.connect.ui.admin.AdminContentManagement
+import com.gohahotel.connect.ui.chat.AdminChatScreen
+import com.gohahotel.connect.ui.chat.GuestChatScreen
+import com.gohahotel.connect.ui.events.EventDetailScreen
 import com.gohahotel.connect.ui.staff.StaffDashboardScreen
 
 @Composable
@@ -77,21 +82,17 @@ fun GohaNavGraph() {
                     when (role) {
                         "ADMIN" -> {
                             navController.navigate(Screen.AdminDashboard.route) {
-                                popUpTo(Screen.Login.route) { inclusive = true }
+                                popUpTo(0) { inclusive = true }
                             }
                         }
                         "STAFF", "KITCHEN", "RECEPTION", "HOUSEKEEPING" -> {
                             navController.navigate(Screen.StaffDashboard.route) {
-                                popUpTo(Screen.Login.route) { inclusive = true }
+                                popUpTo(0) { inclusive = true }
                             }
                         }
                         else -> { // GUEST
-                            if (navController.previousBackStackEntry != null) {
-                                navController.popBackStack()
-                            } else {
-                                navController.navigate(Screen.Home.route) {
-                                    popUpTo(Screen.Login.route) { inclusive = true }
-                                }
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(0) { inclusive = true }
                             }
                         }
                     }
@@ -102,15 +103,18 @@ fun GohaNavGraph() {
         // ── Home ─────────────────────────────────────────────────────────────
         composable(Screen.Home.route) {
             HomeScreen(
-                onNavigateToRooms      = { navController.navigate(Screen.RoomList.route) },
-                onNavigateToMenu       = { navController.navigate(Screen.Menu.route) },
-                onNavigateToConcierge  = { navController.navigate(Screen.Concierge.route) },
-                onNavigateToGuide      = { navController.navigate(Screen.CulturalGuide.route) },
-                onNavigateToQr         = { navController.navigate(Screen.QrScanner.route) },
-                onNavigateToSettings   = { navController.navigate(Screen.Settings.route) },
-                onNavigateToAdmin      = { navController.navigate(Screen.AdminDashboard.route) },
-                onNavigateToTracking   = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) },
-                onNavigateToMyOrders   = { navController.navigate(Screen.GuestOrders.route) }
+                onNavigateToRooms           = { navController.navigate(Screen.RoomList.route) },
+                onNavigateToMenu            = { navController.navigate(Screen.Menu.route) },
+                onNavigateToConcierge       = { navController.navigate(Screen.Concierge.route) },
+                onNavigateToGuide           = { navController.navigate(Screen.CulturalGuide.route) },
+                onNavigateToQr              = { navController.navigate(Screen.QrScanner.route) },
+                onNavigateToSettings        = { navController.navigate(Screen.Settings.route) },
+                onNavigateToAdmin           = { navController.navigate(Screen.AdminDashboard.route) },
+                onNavigateToTracking        = { id -> navController.navigate(Screen.OrderTracking.createRoute(id)) },
+                onNavigateToMyOrders        = { navController.navigate(Screen.GuestOrders.route) },
+                onNavigateToEvent           = { id -> navController.navigate(Screen.EventDetail.createRoute(id)) },
+                onNavigateToChat            = { navController.navigate(Screen.GuestChat.route) },
+                onNavigateToMyReservations  = { navController.navigate(Screen.MyReservations.route) }
             )
         }
 
@@ -135,10 +139,27 @@ fun GohaNavGraph() {
         composable(Screen.InRoomRequest.route) {
             InRoomRequestScreen(onBack = { navController.popBackStack() })
         }
+        composable(Screen.MyReservations.route) {
+            MyReservationsScreen(
+                onBack      = { navController.popBackStack() },
+                onRoomClick = { roomId -> navController.navigate(Screen.RoomDetail.createRoute(roomId)) }
+            )
+        }
 
         // ── Food ──────────────────────────────────────────────────────────────
         composable(Screen.Menu.route) {
             MenuScreen(
+                onBack     = { navController.popBackStack() },
+                onViewCart = { navController.navigate(Screen.Cart.route) },
+                onDishClick = { id -> navController.navigate(Screen.DishDetail.createRoute(id)) }
+            )
+        }
+        composable(
+            route     = Screen.DishDetail.route,
+            arguments = listOf(navArgument("menuItemId") { type = NavType.StringType })
+        ) {
+            DishDetailScreen(
+                menuItemId = it.arguments?.getString("menuItemId") ?: "",
                 onBack     = { navController.popBackStack() },
                 onViewCart = { navController.navigate(Screen.Cart.route) }
             )
@@ -225,6 +246,7 @@ fun GohaNavGraph() {
                 onNavigateToUsers      = { navController.navigate(Screen.AdminUsers.route) },
                 onNavigateToPromotions = { navController.navigate(Screen.AdminPromotions.route) },
                 onNavigateToContent    = { navController.navigate(Screen.AdminContent.route) },
+                onNavigateToChat       = { navController.navigate(Screen.AdminChat.route) },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
@@ -257,10 +279,33 @@ fun GohaNavGraph() {
         composable(Screen.AdminContent.route) {
             AdminContentManagement(onBack = { navController.popBackStack() })
         }
-        
+
+        composable(Screen.AdminChat.route) {
+            AdminChatScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ── Guest Chat ────────────────────────────────────────────────────────
+        composable(Screen.GuestChat.route) {
+            GuestChatScreen(onBack = { navController.popBackStack() })
+        }
+
         // ── Staff ─────────────────────────────────────────────────────────────
         composable(Screen.StaffDashboard.route) {
             StaffDashboardScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ── Events ────────────────────────────────────────────────────────────
+        composable(
+            route     = Screen.EventDetail.route,
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) {
+            EventDetailScreen(
+                eventId           = it.arguments?.getString("eventId") ?: "",
+                onBack            = { navController.popBackStack() },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route)
+                }
+            )
         }
     }
 }

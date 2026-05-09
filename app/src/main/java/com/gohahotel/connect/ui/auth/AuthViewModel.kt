@@ -175,4 +175,9 @@ class AuthViewModel @Inject constructor(
                 .onFailure { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
         }
     }
+
+    /** Call this when LoginScreen is first shown to reset all state */
+    fun resetState() {
+        _uiState.value = AuthUiState()
+    }
 }

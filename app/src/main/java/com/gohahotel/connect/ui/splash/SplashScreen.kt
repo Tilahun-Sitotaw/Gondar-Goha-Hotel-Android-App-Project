@@ -78,10 +78,21 @@ fun SplashScreen(
 
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(3000)
-        
-        // Always navigate to login first as per user request
-        onNavigateToLogin()
+        delay(2800)
+    }
+
+    // Navigate once auth state is resolved (non-null)
+    LaunchedEffect(isLoggedIn, userRole) {
+        val loggedIn = isLoggedIn ?: return@LaunchedEffect
+        if (loggedIn) {
+            when (userRole) {
+                "ADMIN"                                          -> onNavigateToAdmin()
+                "STAFF", "KITCHEN", "RECEPTION", "HOUSEKEEPING" -> onNavigateToStaff()
+                else                                             -> onNavigateToHome()
+            }
+        } else {
+            onNavigateToLogin()
+        }
     }
 
     Box(

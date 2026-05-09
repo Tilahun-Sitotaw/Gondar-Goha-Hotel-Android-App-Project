@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import com.gohahotel.connect.core.notifications.SunsetAlertWorker
 import com.gohahotel.connect.data.repository.AuthRepository
+import com.gohahotel.connect.data.repository.RoomRepository
 import com.gohahotel.connect.data.remote.FirestoreService
+import com.gohahotel.connect.domain.model.Booking
 import com.gohahotel.connect.domain.model.Promotion
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -17,22 +19,25 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 data class HomeUiState(
-    val guestName: String      = "Guest",
-    val userRole: String       = "GUEST",
-    val roomNumber: String     = "",
-    val checkIn: String        = "",
-    val checkOut: String       = "",
-    val greeting: String       = "day",
-    val showSunsetAlert: Boolean = false,
-    val sunsetMinutes: Int     = 30,
+    val guestName: String           = "Valued Guest",
+    val userRole: String            = "GUEST",
+    val isGuest: Boolean            = false,
+    val roomNumber: String          = "",
+    val checkIn: String             = "",
+    val checkOut: String            = "",
+    val greeting: String            = "Day",
+    val showSunsetAlert: Boolean    = false,
+    val sunsetMinutes: Int          = 30,
     val promotions: List<Promotion> = emptyList(),
-    val isLoading: Boolean = false
+    val activeBooking: Booking?     = null,
+    val isLoading: Boolean          = false
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val firestoreService: FirestoreService,
+    private val roomRepository: RoomRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -47,22 +52,45 @@ class HomeViewModel @Inject constructor(
 
     private fun loadUserInfo() {
         val user = authRepository.currentUser
-        val uid = user?.uid
+        val uid  = user?.uid
         val email = user?.email
-        
+        val isAnon = user?.isAnonymous == true
+
         _uiState.update {
-            it.copy(guestName = user?.displayName?.ifBlank { "Valued Guest" } ?: "Valued Guest")
+            it.copy(
+                guestName = if (isAnon) "Valued Guest"
+                            else user?.displayName?.ifBlank { "Valued Guest" } ?: "Valued Guest",
+                isGuest = isAnon
+            )
         }
 
-        if (uid != null) {
+        if (uid != null && !isAnon) {
             viewModelScope.launch {
-                var role = firestoreService.getUserRole(uid)
-                // Force ADMIN role for this specific email (case-insensitive)
-                if (email?.lowercase()?.trim() == "gohahotel34@gmail.com") {
-                    role = "ADMIN"
-                }
+                val role = if (email?.lowercase()?.trim() == "gohahotel34@gmail.com") "ADMIN"
+                           else firestoreService.getUserRole(uid)
                 _uiState.update { it.copy(userRole = role) }
+                // Load active booking for this guest
+                loadActiveBooking(uid)
             }
+        }
+    }
+
+    private fun loadActiveBooking(guestId: String) {
+        viewModelScope.launch {
+            try {
+                val bookings = roomRepository.getBookingsForGuest(guestId)
+                val active = bookings.firstOrNull { it.status.name == "CONFIRMED" || it.status.name == "CHECKED_IN" }
+                if (active != null) {
+                    _uiState.update {
+                        it.copy(
+                            activeBooking = active,
+                            roomNumber    = active.roomName,
+                            checkIn       = active.checkInDate,
+                            checkOut      = active.checkOutDate
+                        )
+                    }
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -70,7 +98,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val promos = firestoreService.fetchPromotions()
+                val promos = firestoreService.fetchPromotions().filter { it.isActive }
                 _uiState.update { it.copy(promotions = promos, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
@@ -93,11 +121,7 @@ class HomeViewModel @Inject constructor(
             .setInitialDelay(0, TimeUnit.MILLISECONDS)
             .build()
         WorkManager.getInstance(context)
-            .enqueueUniqueWork(
-                "sunset_alert",
-                ExistingWorkPolicy.REPLACE,
-                workRequest
-            )
+            .enqueueUniqueWork("sunset_alert", ExistingWorkPolicy.REPLACE, workRequest)
         _uiState.update { it.copy(showSunsetAlert = true, sunsetMinutes = 30) }
     }
 

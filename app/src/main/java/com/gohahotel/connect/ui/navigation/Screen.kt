@@ -9,15 +9,19 @@ sealed class Screen(val route: String) {
     object Home    : Screen("home")
 
     // Rooms
-    object RoomList   : Screen("rooms")
-    object RoomDetail : Screen("room_detail/{roomId}") {
+    object RoomList        : Screen("rooms")
+    object RoomDetail      : Screen("room_detail/{roomId}") {
         fun createRoute(roomId: String) = "room_detail/$roomId"
     }
-    object InRoomRequest : Screen("in_room_request")
+    object InRoomRequest   : Screen("in_room_request")
+    object MyReservations  : Screen("my_reservations")
 
     // Food
     object Menu          : Screen("menu")
     object Cart          : Screen("cart")
+    object DishDetail    : Screen("dish_detail/{menuItemId}") {
+        fun createRoute(menuItemId: String) = "dish_detail/$menuItemId"
+    }
     object OrderTracking : Screen("order_tracking/{orderId}") {
         fun createRoute(orderId: String) = "order_tracking/$orderId"
     }
@@ -46,6 +50,15 @@ sealed class Screen(val route: String) {
     object AdminUsers      : Screen("admin_users")
     object AdminPromotions : Screen("admin_promotions")
     object AdminContent    : Screen("admin_content")
+    object AdminChat       : Screen("admin_chat")
+
+    // Chat
+    object GuestChat : Screen("guest_chat")
+
+    // Events
+    object EventDetail : Screen("event_detail/{eventId}") {
+        fun createRoute(eventId: String) = "event_detail/$eventId"
+    }
 
     // Staff
     object StaffDashboard  : Screen("staff_dashboard")

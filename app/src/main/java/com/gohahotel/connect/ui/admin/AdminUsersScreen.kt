@@ -89,12 +89,17 @@ fun AdminUsersScreen(
 
 @Composable
 fun UserIdentityCard(user: Map<String, Any>, onRoleChange: (String) -> Unit) {
-    val name = user["name"] as? String ?: "Anonymous Guest"
-    val email = user["email"] as? String ?: "No Contact Email"
+    val name = (user["displayName"] as? String)?.takeIf { it.isNotBlank() }
+        ?: (user["name"] as? String)?.takeIf { it.isNotBlank() }
+        ?: (user["email"] as? String)?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
+        ?: "Guest"
+    val email = user["email"] as? String ?: "No email"
     val role = user["role"] as? String ?: "GUEST"
     val profileImage = user["profileImage"] as? String ?: ""
     val phone = user["phoneNumber"] as? String ?: ""
     val address = user["address"] as? String ?: ""
+    val uid = user["uid"] as? String ?: ""
+    val isAnonymous = uid.isBlank() || email == "No email"
     
     var expanded by remember { mutableStateOf(false) }
 
@@ -147,33 +152,60 @@ fun UserIdentityCard(user: Map<String, Any>, onRoleChange: (String) -> Unit) {
                     
                     Spacer(Modifier.height(8.dp))
                     
-                    Surface(
-                        color = when (role) {
-                            "ADMIN" -> GoldPrimary.copy(alpha = 0.15f)
-                            "GUEST" -> TealPrimary.copy(alpha = 0.15f)
-                            else -> Color.White.copy(alpha = 0.05f)
-                        },
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            role,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Surface(
                             color = when (role) {
-                                "ADMIN" -> GoldPrimary
-                                "GUEST" -> TealPrimary
-                                else -> GoldLight
+                                "ADMIN" -> GoldPrimary.copy(alpha = 0.15f)
+                                "GUEST" -> TealPrimary.copy(alpha = 0.15f)
+                                else -> Color.White.copy(alpha = 0.05f)
                             },
-                            fontWeight = FontWeight.Bold
-                        )
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                role,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = when (role) {
+                                    "ADMIN" -> GoldPrimary
+                                    "GUEST" -> TealPrimary
+                                    else -> GoldLight
+                                },
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        if (isAnonymous) {
+                            Surface(
+                                color = Color.White.copy(0.05f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Anonymous",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = OnSurfaceDark.copy(0.4f))
+                            }
+                        }
                     }
                 }
 
-                IconButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.background(Color.White.copy(0.03f), CircleShape)
-                ) {
-                    Icon(Icons.Default.Shield, "Manage Role", tint = GoldPrimary.copy(alpha = 0.8f))
+                // Only show role management for non-admin users
+                if (role != "ADMIN") {
+                    IconButton(
+                        onClick = { expanded = true },
+                        modifier = Modifier.background(Color.White.copy(0.03f), CircleShape)
+                    ) {
+                        Icon(Icons.Default.Shield, "Manage Role", tint = GoldPrimary.copy(alpha = 0.8f))
+                    }
+                } else {
+                    // Admin badge — no role change allowed
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(GoldPrimary.copy(0.1f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.AdminPanelSettings, null,
+                            tint = GoldPrimary, modifier = Modifier.size(20.dp))
+                    }
                 }
             }
 
@@ -193,17 +225,19 @@ fun UserIdentityCard(user: Map<String, Any>, onRoleChange: (String) -> Unit) {
             }
         }
 
-        // Role Dropdown
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(CardDark).border(1.dp, GoldPrimary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-        ) {
-            listOf("GUEST", "RECEPTION", "KITCHEN", "HOUSEKEEPING", "STAFF", "ADMIN").forEach { r ->
-                DropdownMenuItem(
-                    text = { Text(r, color = if(r == role) GoldPrimary else OnSurfaceDark) },
-                    onClick = { expanded = false; onRoleChange(r) }
-                )
+        // Role Dropdown — only for non-admin users
+        if (role != "ADMIN") {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(CardDark).border(1.dp, GoldPrimary.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+            ) {
+                listOf("GUEST", "RECEPTION", "KITCHEN", "HOUSEKEEPING", "STAFF").forEach { r ->
+                    DropdownMenuItem(
+                        text = { Text(r, color = if(r == role) GoldPrimary else OnSurfaceDark) },
+                        onClick = { expanded = false; onRoleChange(r) }
+                    )
+                }
             }
         }
     }

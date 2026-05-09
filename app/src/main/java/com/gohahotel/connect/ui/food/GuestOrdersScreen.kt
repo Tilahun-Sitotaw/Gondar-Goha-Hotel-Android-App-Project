@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,22 +53,47 @@ fun GuestOrdersScreen(
         },
         containerColor = SurfaceDark
     ) { padding ->
-        if (orders.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Receipt, null, Modifier.size(64.dp), tint = GoldPrimary.copy(alpha = 0.3f))
-                    Spacer(Modifier.height(16.dp))
-                    Text("No orders found", style = MaterialTheme.typography.titleMedium, color = Color.White.copy(0.6f))
+        when {
+            uiState.isLoading && orders.isEmpty() -> {
+                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GoldPrimary)
                 }
             }
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(padding)
-            ) {
-                items(orders.sortedByDescending { it.createdAt }, key = { it.id }) { order ->
-                    GuestOrderCard(order = order, onClick = { onNavigateToOrder(order.id) })
+            orders.isEmpty() -> {
+                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        Icon(Icons.Default.Receipt, null,
+                            Modifier.size(72.dp), tint = GoldPrimary.copy(alpha = 0.2f))
+                        Text("No orders yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White.copy(0.6f),
+                            fontWeight = FontWeight.Bold)
+                        Text("Your food orders will appear here once you place one.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(0.35f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        uiState.error?.let {
+                            Text("⚠️ $it",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFFE24A4A).copy(0.8f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        }
+                    }
+                }
+            }
+            else -> {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(padding)
+                ) {
+                    items(orders.sortedByDescending { it.createdAt }, key = { it.id }) { order ->
+                        GuestOrderCard(order = order, onClick = { onNavigateToOrder(order.id) })
+                    }
                 }
             }
         }

@@ -54,6 +54,10 @@ class FoodRepository @Inject constructor(
     fun observeOrderStatus(orderId: String): Flow<Order?> =
         firestoreService.observeOrder(orderId)
 
+    /** Real-time stream of all orders for the current guest from Firestore */
+    fun observeGuestOrders(guestId: String): Flow<List<Order>> =
+        firestoreService.observeOrdersByGuest(guestId)
+
     fun getActiveOrders(): Flow<List<Order>> =
         orderDao.getActiveOrders().map { it.map { e -> e.toOrderDomain(gson) } }
 

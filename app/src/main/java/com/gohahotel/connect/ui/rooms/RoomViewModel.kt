@@ -15,6 +15,7 @@ data class RoomsUiState(
     val rooms: List<HotelRoom>       = emptyList(),
     val selectedRoom: HotelRoom?     = null,
     val selectedFilter: RoomType?    = null,
+    val myBookings: List<Booking>    = emptyList(),
     val isLoading: Boolean           = false,
     val isBookingSuccess: Boolean    = false,
     val error: String?               = null,
@@ -24,13 +25,15 @@ data class RoomsUiState(
 @HiltViewModel
 class RoomViewModel @Inject constructor(
     private val roomRepository: RoomRepository,
-    private val authRepository: com.gohahotel.connect.data.repository.AuthRepository
+    private val authRepository: com.gohahotel.connect.data.repository.AuthRepository,
+    private val emailService: com.gohahotel.connect.data.remote.EmailService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoomsUiState())
     val uiState = _uiState.asStateFlow()
 
     val isGuest: Boolean get() = authRepository.currentUser?.isAnonymous == true
+    val currentUser get() = authRepository.currentUser
 
     init { loadRooms() }
 
@@ -66,7 +69,9 @@ class RoomViewModel @Inject constructor(
         guestId: String? = null, guestName: String? = null, guestEmail: String? = null,
         roomId: String, roomName: String, roomType: String,
         checkIn: String, checkOut: String, nights: Int, guests: Int,
-        totalPrice: Double, specialRequests: String
+        totalPrice: Double, specialRequests: String,
+        referenceId: String = "GH-${System.currentTimeMillis().toString().takeLast(6)}",
+        currency: String = "ETB"
     ) {
         val user = authRepository.currentUser
         val finalGuestId = guestId ?: user?.uid ?: "anonymous"
@@ -92,6 +97,24 @@ class RoomViewModel @Inject constructor(
                         specialRequests = specialRequests
                     )
                 )
+                // Send confirmation email if guest has an email
+                if (finalGuestEmail.isNotBlank()) {
+                    try {
+                        emailService.sendBookingConfirmation(
+                            recipientEmail = finalGuestEmail,
+                            guestName      = finalGuestName,
+                            roomName       = roomName,
+                            roomType       = roomType,
+                            checkIn        = checkIn,
+                            checkOut       = checkOut,
+                            nights         = nights,
+                            guests         = guests,
+                            totalPrice     = totalPrice,
+                            currency       = currency,
+                            referenceId    = referenceId
+                        )
+                    } catch (_: Exception) { /* email failure should not block booking */ }
+                }
                 _uiState.update { it.copy(isLoading = false, isBookingSuccess = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
@@ -112,4 +135,17 @@ class RoomViewModel @Inject constructor(
     }
 
     fun resetBookingState() = _uiState.update { it.copy(isBookingSuccess = false, requestSubmitted = false) }
+
+    fun loadMyReservations() {
+        val uid = authRepository.currentUser?.uid ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val bookings = roomRepository.getBookingsForGuest(uid)
+                _uiState.update { it.copy(myBookings = bookings, isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
 }
