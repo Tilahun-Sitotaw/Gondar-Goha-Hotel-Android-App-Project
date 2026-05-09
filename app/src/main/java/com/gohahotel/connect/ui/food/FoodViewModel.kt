@@ -61,6 +61,19 @@ class FoodViewModel @Inject constructor(
                 _uiState.update { it.copy(userOrders = orders) }
             }
         }
+        // Real-time Firestore listener for guest orders — with safe error handling
+        val uid = authRepository.currentUser?.uid
+        if (!uid.isNullOrBlank() && authRepository.currentUser?.isAnonymous == false) {
+            viewModelScope.launch {
+                foodRepository.observeGuestOrders(uid)
+                    .catch { /* Firestore index error — fall back to local Room DB */ }
+                    .collect { orders ->
+                        if (orders.isNotEmpty()) {
+                            _uiState.update { it.copy(userOrders = orders) }
+                        }
+                    }
+            }
+        }
     }
 
     fun selectCategory(category: MenuCategory?) {

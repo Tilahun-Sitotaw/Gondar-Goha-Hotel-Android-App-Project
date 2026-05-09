@@ -2,21 +2,15 @@ package com.gohahotel.connect.ui.admin
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddAPhoto
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.VideoCall
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,16 +19,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.gohahotel.connect.domain.model.Promotion
 import com.gohahotel.connect.domain.model.PromotionType
+import com.gohahotel.connect.ui.components.VideoPlayer
 import com.gohahotel.connect.ui.theme.*
+
+private fun promoTypeColor(type: PromotionType): Color = when (type) {
+    PromotionType.EVENT     -> Color(0xFFE29B4A)
+    PromotionType.PROMOTION -> Color(0xFF50C878)
+    PromotionType.CULTURAL  -> Color(0xFF9B59B6)
+    PromotionType.VIDEO     -> Color(0xFF4A90E2)
+}
+
+private fun promoTypeIcon(type: PromotionType): String = when (type) {
+    PromotionType.EVENT     -> "🎉"
+    PromotionType.PROMOTION -> "🏷️"
+    PromotionType.CULTURAL  -> "🎭"
+    PromotionType.VIDEO     -> "🎬"
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,54 +53,76 @@ fun AdminPromotionsScreen(
 ) {
     val promotions by viewModel.promotions.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    
+    var editingPromo by remember { mutableStateOf<Promotion?>(null) }
+    var promoToDelete by remember { mutableStateOf<Promotion?>(null) }
+
     Scaffold(
+        containerColor = SurfaceDark,
         topBar = {
             TopAppBar(
-                title = { Text("Promotions & Events") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+                title = {
+                    Column {
+                        Text("Events & Promotions", color = OnSurfaceDark,
+                            fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text("${promotions.size} active · ${promotions.count { it.isActive }} live",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFE29B4A).copy(alpha = 0.8f))
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = GoldPrimary)
+                    }
+                },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, null, tint = GoldPrimary)
+                        Box(
+                            modifier = Modifier.size(36.dp).background(Color(0xFFE29B4A), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Add, null, tint = Color.Black, modifier = Modifier.size(20.dp))
+                        }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
             )
         }
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0A1424), Color.Black)))
+                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0F0A05), Color(0xFF050D18))))
                 .padding(padding)
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Text(
-                    "Manage Daily Events, Promotions, and Videos",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp),
-                    color = GoldPrimary.copy(alpha = 0.6f)
-                )
-            
             if (promotions.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No active promotions. Click + to add.", color = OnSurfaceDark.copy(alpha = 0.4f))
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text("🎉", fontSize = 56.sp)
+                    Spacer(Modifier.height(16.dp))
+                    Text("No events yet", color = OnSurfaceDark.copy(0.5f), fontWeight = FontWeight.Bold)
+                    Text("Tap + to add an event or promotion", color = OnSurfaceDark.copy(0.3f),
+                        style = MaterialTheme.typography.bodySmall)
                 }
             } else {
                 LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    items(promotions) { promo ->
-                        PromotionAdminCard(
+                    items(promotions, key = { it.id }) { promo ->
+                        AdminPromoCard(
                             promotion = promo,
-                            onDelete = { viewModel.deletePromotion(promo.id) }
+                            onEdit = { editingPromo = promo },
+                            onDelete = { promoToDelete = promo }
                         )
                     }
                 }
             }
         }
     }
-}
 
     if (showAddDialog) {
         AddPromotionDialog(
@@ -102,159 +133,344 @@ fun AdminPromotionsScreen(
             }
         )
     }
+
+    editingPromo?.let { promo ->
+        AddPromotionDialog(
+            promoToEdit = promo,
+            onDismiss = { editingPromo = null },
+            onConfirm = { updated ->
+                viewModel.savePromotion(updated)
+                editingPromo = null
+            }
+        )
+    }
+
+    promoToDelete?.let { promo ->
+        AlertDialog(
+            onDismissRequest = { promoToDelete = null },
+            containerColor = Color(0xFF1A1005),
+            title = { Text("Delete Event?", color = Color(0xFFE24A4A), fontWeight = FontWeight.Bold) },
+            text = { Text("Remove \"${promo.title}\" permanently?", color = OnSurfaceDark.copy(0.8f)) },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.deletePromotion(promo.id); promoToDelete = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE24A4A))
+                ) { Text("Delete", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { promoToDelete = null }) { Text("Cancel", color = GoldPrimary) }
+            }
+        )
+    }
 }
 
 @Composable
-fun PromotionAdminCard(promotion: Promotion, onDelete: () -> Unit) {
+private fun AdminPromoCard(promotion: Promotion, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val accent = promoTypeColor(promotion.type)
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark)
+        modifier = Modifier.fillMaxWidth().clickable { onEdit() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF141008)),
+        border = BorderStroke(1.dp, accent.copy(0.3f))
     ) {
         Column {
-            Box(modifier = Modifier.fillMaxWidth().height(180.dp).background(Color.White.copy(0.05f))) {
-                if (promotion.imageUrl.isNotEmpty()) {
+            // Banner — show video with controls if available, otherwise image
+            Box(
+                modifier = Modifier.fillMaxWidth().height(180.dp)
+                    .background(accent.copy(0.08f))
+            ) {
+                if (promotion.videoUrl.isNotEmpty()) {
+                    VideoPlayer(
+                        videoUrl     = promotion.videoUrl,
+                        modifier     = Modifier.fillMaxSize(),
+                        autoPlay     = false,
+                        muted        = true,
+                        showControls = true
+                    )
+                } else if (promotion.imageUrl.isNotEmpty()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(promotion.imageUrl)
-                            .crossfade(true)
-                            .build(),
+                            .data(promotion.imageUrl).crossfade(true).build(),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                            .background(Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(0.6f))
+                            ))
+                    )
                 } else {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Add, null, tint = GoldPrimary.copy(0.2f), modifier = Modifier.size(48.dp))
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(promoTypeIcon(promotion.type), fontSize = 48.sp)
                     }
                 }
-                if (promotion.videoUrl.isNotEmpty()) {
-                    Icon(
-                        Icons.Default.PlayCircle,
-                        null,
-                        modifier = Modifier.align(Alignment.Center).size(48.dp),
-                        tint = Color.White
+                // Type badge
+                Surface(
+                    modifier = Modifier.align(Alignment.TopStart).padding(10.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = accent.copy(0.85f)
+                ) {
+                    Text(
+                        "${promoTypeIcon(promotion.type)} ${promotion.type.name}",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Black, fontWeight = FontWeight.Bold
+                    )
+                }
+                // Active badge
+                Surface(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(10.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (promotion.isActive) Color(0xFF50C878).copy(0.85f) else Color(0xFFE24A4A).copy(0.85f)
+                ) {
+                    Text(
+                        if (promotion.isActive) "● LIVE" else "● OFF",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Black, fontWeight = FontWeight.Bold
                     )
                 }
             }
+
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(promotion.title, fontWeight = FontWeight.Bold, color = GoldPrimary)
-                    Text(promotion.description, style = MaterialTheme.typography.bodySmall, color = OnSurfaceDark.copy(alpha = 0.7f))
-                    Text("Type: ${promotion.type}", style = MaterialTheme.typography.labelSmall, color = GoldLight)
+                    Text(promotion.title, fontWeight = FontWeight.ExtraBold,
+                        color = OnSurfaceDark, fontSize = 15.sp)
+                    if (promotion.description.isNotBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(promotion.description, style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceDark.copy(0.6f), maxLines = 2)
+                    }
+                    if (promotion.date.isNotBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("📅 ${promotion.date}", style = MaterialTheme.typography.labelSmall,
+                            color = accent.copy(0.8f))
+                    }
+                }
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, null, tint = GoldLight)
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red.copy(alpha = 0.6f))
+                    Icon(Icons.Default.Delete, null, tint = Color(0xFFE24A4A).copy(0.8f))
                 }
             }
         }
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Add / Edit Promotion Dialog
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun AddPromotionDialog(
     viewModel: AdminViewModel = hiltViewModel(),
+    promoToEdit: Promotion? = null,
     onDismiss: () -> Unit,
     onConfirm: (Promotion) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var imageUrl by remember { mutableStateOf("") }
-    var videoUrl by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(PromotionType.EVENT) }
+    var title       by remember { mutableStateOf(promoToEdit?.title ?: "") }
+    var description by remember { mutableStateOf(promoToEdit?.description ?: "") }
+    var date        by remember { mutableStateOf(promoToEdit?.date ?: "") }
+    var imageUrl    by remember { mutableStateOf(promoToEdit?.imageUrl ?: "") }
+    var videoUrl    by remember { mutableStateOf(promoToEdit?.videoUrl ?: "") }
+    var type        by remember { mutableStateOf(promoToEdit?.type ?: PromotionType.EVENT) }
+    var isActive    by remember { mutableStateOf(promoToEdit?.isActive ?: true) }
+    var validationError by remember { mutableStateOf<String?>(null) }
+    // Dedicated upload state
+    val isUploading by viewModel.isUploading.collectAsState()
+    val uploadError by viewModel.uploadError.collectAsState()
 
     val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.uploadImage(it, "promotions") { url -> imageUrl = url } }
+        uri?.let {
+            validationError = null
+            viewModel.uploadImage(it, "promotions") { url -> imageUrl = url }
+        }
     }
-
     val videoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.uploadVideo(it, "promotions") { url -> videoUrl = url } }
+        uri?.let {
+            validationError = null
+            viewModel.uploadVideo(it, "promotions") { url -> videoUrl = url }
+        }
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add New Event/Promo", fontWeight = FontWeight.Bold) },
+        containerColor = Color(0xFF141008),
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(36.dp).background(Color(0xFFE29B4A).copy(0.2f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) { Text("🎉", fontSize = 18.sp) }
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    if (promoToEdit == null) "Add Event / Promo" else "Edit Event / Promo",
+                    color = Color(0xFFE29B4A), fontWeight = FontWeight.ExtraBold
+                )
+            }
+        },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth())
-                
-                Text("Type:", style = MaterialTheme.typography.labelLarge)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PromotionType.entries.forEach { promoType ->
-                        FilterChip(
-                            selected = type == promoType,
-                            onClick = { type = promoType },
-                            label = { Text(promoType.name, fontSize = 10.sp) }
-                        )
+                // Type selector
+                Text("Type", style = MaterialTheme.typography.labelMedium, color = Color(0xFFE29B4A).copy(0.8f))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    PromotionType.entries.forEach { pt ->
+                        val accent = promoTypeColor(pt)
+                        val selected = type == pt
+                        Surface(
+                            onClick = { type = pt },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selected) accent.copy(0.25f) else Color.White.copy(0.05f),
+                            border = BorderStroke(1.dp, if (selected) accent else Color.White.copy(0.1f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(promoTypeIcon(pt), fontSize = 16.sp)
+                                Text(pt.name, style = MaterialTheme.typography.labelSmall,
+                                    color = if (selected) accent else OnSurfaceDark.copy(0.5f),
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+                            }
+                        }
                     }
                 }
 
-                Text("Image", style = MaterialTheme.typography.labelMedium)
+                ColoredTextField(value = title, onValueChange = { title = it; validationError = null },
+                    label = "Title", icon = Icons.Default.Title)
+                ColoredTextField(value = description, onValueChange = { description = it },
+                    label = "Description", icon = Icons.Default.Description, minLines = 2)
+                ColoredTextField(value = date, onValueChange = { date = it },
+                    label = "Date (e.g. June 15, 2026)", icon = Icons.Default.CalendarToday)
+
+                // Active toggle
+                ToggleChip("✅ Active / Live", isActive, Color(0xFF50C878)) { isActive = it }
+
+                // Image
+                Text("Banner Image", style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFFE29B4A).copy(0.8f))
                 if (imageUrl.isNotEmpty()) {
-                    AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.fillMaxWidth().height(100.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+                    AsyncImage(
+                        model = imageUrl, contentDescription = null,
+                        modifier = Modifier.fillMaxWidth().height(130.dp).clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
                 }
-                Button(onClick = { imageLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.AddAPhoto, null)
+                Button(
+                    onClick = { imageLauncher.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE29B4A).copy(0.15f),
+                        contentColor = Color(0xFFE29B4A)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE29B4A).copy(0.4f))
+                ) {
+                    Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Upload Image")
+                    Text(if (imageUrl.isEmpty()) "Upload Banner Image" else "Change Image")
                 }
 
-                Text("Video (Optional)", style = MaterialTheme.typography.labelMedium)
+                // Video (optional)
+                Text("Video (Optional)", style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF4A90E2).copy(0.8f))
                 if (videoUrl.isNotEmpty()) {
-                    Text("Video uploaded: ${videoUrl.take(30)}...", style = MaterialTheme.typography.bodySmall, color = SuccessGreen)
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color(0xFF4A90E2).copy(0.1f),
+                        border = BorderStroke(1.dp, Color(0xFF4A90E2).copy(0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.PlayCircle, null, tint = Color(0xFF4A90E2),
+                                modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Video uploaded ✅", color = Color(0xFF4A90E2),
+                                style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
-                Button(onClick = { videoLauncher.launch("video/*") }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.VideoCall, null)
+                Button(
+                    onClick = { videoLauncher.launch("video/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4A90E2).copy(0.15f),
+                        contentColor = Color(0xFF4A90E2)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFF4A90E2).copy(0.4f))
+                ) {
+                    Icon(Icons.Default.VideoCall, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Upload Video")
+                    Text(if (videoUrl.isEmpty()) "Upload Video" else "Change Video")
+                }
+
+                if (isUploading) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFFE29B4A), trackColor = Color(0xFFE29B4A).copy(0.15f))
+                    Text("⏳ Uploading, please wait...",
+                        color = Color(0xFFE29B4A), style = MaterialTheme.typography.labelSmall)
+                }
+                uploadError?.let {
+                    Text("⚠ $it", color = Color(0xFFE24A4A), style = MaterialTheme.typography.labelSmall)
+                }
+                validationError?.let {
+                    Text(it, color = Color(0xFFE24A4A), style = MaterialTheme.typography.labelSmall)
                 }
             }
         },
         confirmButton = {
-            var validationError by remember { mutableStateOf<String?>(null) }
-            
-            LaunchedEffect(imageUrl, title) {
-                validationError = null
-            }
-            
-            Column(horizontalAlignment = Alignment.End) {
-                if (validationError != null) {
-                    Text(validationError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 4.dp))
-                }
-                Button(onClick = { 
-                    if (title.isBlank()) {
-                        validationError = "Title is required"
-                        return@Button
+            Button(
+                onClick = {
+                    when {
+                        title.isBlank()   -> validationError = "Title is required"
+                        isUploading       -> validationError = "Please wait — upload in progress"
+                        imageUrl.isBlank() -> validationError = "Banner image is required"
+                        else -> onConfirm(
+                            (promoToEdit ?: Promotion()).copy(
+                                title = title,
+                                description = description,
+                                date = date,
+                                imageUrl = imageUrl,
+                                videoUrl = videoUrl,
+                                type = type,
+                                isActive = isActive
+                            )
+                        )
                     }
-                    if (imageUrl.isBlank() && !viewModel.isLoading.value) {
-                        validationError = "Image is required"
-                        return@Button
-                    }
-                    onConfirm(Promotion(
-                        title = title, 
-                        description = description, 
-                        imageUrl = imageUrl, 
-                        videoUrl = videoUrl,
-                        type = type
-                    )) 
-                }) {
-                    if (viewModel.isLoading.value) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = SurfaceDark, strokeWidth = 2.dp)
-                    } else {
-                        Text("Add Promotion")
-                    }
+                },
+                enabled = !isUploading,
+                colors  = ButtonDefaults.buttonColors(containerColor = Color(0xFFE29B4A)),
+                shape   = RoundedCornerShape(12.dp)
+            ) {
+                if (isUploading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.Black, strokeWidth = 2.dp)
+                } else {
+                    Icon(if (promoToEdit == null) Icons.Default.Add else Icons.Default.Check,
+                        null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (promoToEdit == null) "Add Event" else "Update Event",
+                        color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = OnSurfaceDark.copy(0.6f)) }
         }
     )
 }

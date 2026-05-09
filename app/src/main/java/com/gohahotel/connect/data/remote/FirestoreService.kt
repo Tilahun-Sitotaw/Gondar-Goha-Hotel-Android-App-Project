@@ -27,7 +27,13 @@ class FirestoreService @Inject constructor(
     // ─── Storage ─────────────────────────────────────────────────────────────
     suspend fun uploadFile(uri: android.net.Uri, path: String): String {
         val ref = storage.reference.child(path)
-        ref.putFile(uri).await()
+        // Use putStream for better compatibility with content:// URIs on Android
+        val context = com.google.firebase.FirebaseApp.getInstance().applicationContext
+        val inputStream = context.contentResolver.openInputStream(uri)
+            ?: throw Exception("Cannot open image stream")
+        inputStream.use { stream ->
+            ref.putStream(stream).await()
+        }
         return ref.downloadUrl.await().toString()
     }
 
@@ -97,13 +103,13 @@ class FirestoreService @Inject constructor(
     }
 
     suspend fun getOrdersByGuest(guestId: String): List<Order> {
+        // No orderBy to avoid composite index — sort client-side
         return ordersCol.whereEqualTo("guestId", guestId)
-            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
-            .limit(20)
+            .limit(50)
             .get().await()
             .documents.mapNotNull { doc ->
                 doc.toObject(Order::class.java)?.copy(id = doc.id)
-            }
+            }.sortedByDescending { it.createdAt }
     }
 
     suspend fun submitInRoomRequest(request: Map<String, Any>): String {
@@ -144,8 +150,95 @@ class FirestoreService @Inject constructor(
 
     // ─── Admin Operations ────────────────────────────────────────────────────
     suspend fun fetchAllOrders(): List<Order> {
-        return ordersCol.orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
-            .get().await().documents.mapNotNull { it.toObject(Order::class.java)?.copy(id = it.id) }
+        // No orderBy to avoid index requirement — sort client-side
+        return ordersCol.get().await().documents
+            .mapNotNull { it.toObject(Order::class.java)?.copy(id = it.id) }
+            .sortedByDescending { it.createdAt }
+    }
+
+    /** Real-time stream of ALL orders — for admin/kitchen dashboard */
+    fun observeAllOrders(): Flow<List<Order>> = callbackFlow {
+        // No orderBy to avoid composite index requirement — sort client-side
+        val listener = ordersCol
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val orders = snapshot?.documents?.mapNotNull {
+                    it.toObject(Order::class.java)?.copy(id = it.id)
+                }?.sortedByDescending { it.createdAt } ?: emptyList()
+                trySend(orders)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    /** Real-time stream of orders for a specific guest — no composite index needed */
+    fun observeOrdersByGuest(guestId: String): Flow<List<Order>> = callbackFlow {
+        // Use only whereEqualTo (no orderBy) to avoid requiring a composite index.
+        // Sorting is done client-side.
+        val listener = ordersCol
+            .whereEqualTo("guestId", guestId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    // Don't close the flow — just emit empty list so the UI doesn't crash
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val orders = snapshot?.documents?.mapNotNull {
+                    it.toObject(Order::class.java)?.copy(id = it.id)
+                }?.sortedByDescending { it.createdAt } ?: emptyList()
+                trySend(orders)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    /** Save FCM token for a user */
+    suspend fun saveFcmToken(uid: String, token: String) {
+        usersCol.document(uid).update("fcmToken", token).await()
+    }
+
+    // ─── Chat ─────────────────────────────────────────────────────────────────
+    private fun chatCol(guestId: String) =
+        firestore.collection("chats").document(guestId).collection("messages")
+
+    suspend fun sendChatMessage(guestId: String, message: Map<String, Any>) {
+        chatCol(guestId).add(message).await()
+    }
+
+    fun observeChatMessages(guestId: String): Flow<List<Map<String, Any>>> = callbackFlow {
+        // No orderBy to avoid index requirement — sort client-side by timestamp
+        val listener = chatCol(guestId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val msgs = snapshot?.documents?.mapNotNull { doc ->
+                    doc.data?.toMutableMap()?.apply { put("id", doc.id) }
+                }?.sortedBy { it["timestamp"] as? Long ?: 0L } ?: emptyList()
+                trySend(msgs)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    /** Get all chat threads (one per guest) for admin */
+    fun observeAllChatThreads(): Flow<List<Map<String, Any>>> = callbackFlow {
+        val listener = firestore.collection("chats")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                val threads = snapshot?.documents?.mapNotNull { doc ->
+                    doc.data?.toMutableMap()?.apply { put("guestId", doc.id) }
+                } ?: emptyList()
+                trySend(threads)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    /** Update chat thread metadata (last message, unread count) */
+    suspend fun updateChatThread(guestId: String, data: Map<String, Any>) {
+        firestore.collection("chats").document(guestId).set(data,
+            com.google.firebase.firestore.SetOptions.merge()).await()
     }
 
     suspend fun fetchAllUsers(): List<Map<String, Any>> {

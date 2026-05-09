@@ -12,10 +12,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class PaymentUiState(
-    val selectedMethod: PaymentMethod = PaymentMethod.CASH_AT_HOTEL,
+    val selectedMethod: PaymentMethod = PaymentMethod.TELE_BIRR,
     val isProcessing: Boolean = false,
     val paymentSuccess: Boolean = false,
     val transactionId: String? = null,
+    val pendingAmount: Double = 0.0,
+    val pendingCurrency: String = "ETB",
     val error: String? = null
 )
 
@@ -33,19 +35,18 @@ class PaymentViewModel @Inject constructor(
 
     fun processPayment(amount: Double, referenceId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isProcessing = true, error = null) }
+            _uiState.update { it.copy(isProcessing = true, error = null, pendingAmount = amount) }
             val result = paymentRepository.processPayment(
-                amount = amount,
-                currency = "ETB",
-                method = _uiState.value.selectedMethod,
+                amount      = amount,
+                currency    = "ETB",
+                method      = _uiState.value.selectedMethod,
                 referenceId = referenceId
             )
-            
             if (result.success) {
                 _uiState.update { it.copy(
-                    isProcessing = false, 
-                    paymentSuccess = true, 
-                    transactionId = result.transactionId 
+                    isProcessing  = false,
+                    paymentSuccess = true,
+                    transactionId = result.transactionId
                 ) }
             } else {
                 _uiState.update { it.copy(isProcessing = false, error = result.error) }

@@ -1,9 +1,12 @@
 package com.gohahotel.connect.ui.auth
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -14,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -41,16 +45,31 @@ fun LoginScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+
+    var email           by remember { mutableStateOf("") }
+    var password        by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var isRegisterMode by remember { mutableStateOf(false) }
-    var displayName by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
+    var isRegisterMode  by remember { mutableStateOf(false) }
+    var displayName     by remember { mutableStateOf("") }
+    var phoneNumber     by remember { mutableStateOf("") }
+    var address         by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var otpCode by remember { mutableStateOf("") }
+    var otpCode         by remember { mutableStateOf("") }
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
+    var idDocumentUri   by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    // Reset all state when screen is first shown (handles logout → re-login flow)
+    LaunchedEffect(Unit) {
+        viewModel.resetState()
+        email = ""
+        password = ""
+        confirmPassword = ""
+        otpCode = ""
+        displayName = ""
+        phoneNumber = ""
+        address = ""
+        idDocumentUri = null
+    }
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) onLoginSuccess(uiState.userRole)
@@ -58,17 +77,34 @@ fun LoginScreen(
 
     if (showForgotPasswordDialog) {
         ForgotPasswordDialog(
-            uiState = uiState,
+            uiState   = uiState,
             onDismiss = { showForgotPasswordDialog = false },
             onResetPasswordRequest = { viewModel.resetPassword(it) }
         )
     }
 
+    // ── Background ────────────────────────────────────────────────────────────
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(TealDark, SurfaceDark, Color.Black)))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF071520), Color(0xFF050D18), Color.Black)
+                )
+            )
     ) {
+        // Ambient glow
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(GoldPrimary.copy(0.06f), Color.Transparent),
+                        radius = 1000f
+                    )
+                )
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,339 +112,516 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(50.dp))
+            Spacer(Modifier.height(56.dp))
 
-            // Professional Compact Logo
-            Surface(
-                modifier = Modifier.size(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = GoldPrimary,
-                shadowElevation = 6.dp
+            // ── Logo ──────────────────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(
+                        Brush.linearGradient(listOf(GoldLight, GoldPrimary)),
+                        RoundedCornerShape(20.dp)
+                    )
+                    .border(1.dp, GoldLight.copy(0.4f), RoundedCornerShape(20.dp)),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("G", color = SurfaceDark, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+                Text("G", color = Color(0xFF050D18), fontSize = 40.sp,
+                    fontWeight = FontWeight.ExtraBold)
+            }
+
+            Spacer(Modifier.height(14.dp))
+            Text("GOHA HOTEL",
+                style = MaterialTheme.typography.titleLarge,
+                color = GoldPrimary,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 4.sp)
+            Text("GONDAR · ETHIOPIA",
+                style = MaterialTheme.typography.labelSmall,
+                color = GoldLight.copy(0.5f),
+                letterSpacing = 3.sp)
+
+            Spacer(Modifier.height(28.dp))
+
+            // ── Mode toggle tabs ──────────────────────────────────────────────
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xFF0E1B2A),
+                border = BorderStroke(1.dp, Color.White.copy(0.06f))
+            ) {
+                Row(modifier = Modifier.padding(4.dp)) {
+                    listOf("Sign In" to false, "Register" to true).forEach { (label, isReg) ->
+                        val selected = isRegisterMode == isReg
+                        Surface(
+                            onClick = { isRegisterMode = isReg },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selected) GoldPrimary else Color.Transparent
+                        ) {
+                            Text(
+                                label,
+                                modifier = Modifier.padding(vertical = 10.dp),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (selected) Color(0xFF050D18) else OnSurfaceDark.copy(0.5f),
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(10.dp))
-            Text("GOHA HOTEL", style = MaterialTheme.typography.titleMedium,
-                color = GoldPrimary, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Spacer(Modifier.height(20.dp))
 
-            Spacer(Modifier.height(16.dp))
-
-            // Main Auth Card - Ultra Compact
-            Card(
+            // ── Auth Card ─────────────────────────────────────────────────────
+            Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = CardDark.copy(alpha = 0.95f))
+                color = Color(0xFF0E1B2A),
+                border = BorderStroke(1.dp, Color.White.copy(0.06f))
             ) {
-                Column(Modifier.padding(16.dp)) {
-                    Text(
-                        if (isRegisterMode) "Create Account" else "Welcome Back",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = OnSurfaceDark,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    Spacer(Modifier.height(12.dp))
-
-                    val textFieldColors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = OnSurfaceDark,
-                        unfocusedTextColor = OnSurfaceDark,
-                        focusedBorderColor = GoldPrimary,
-                        unfocusedBorderColor = GoldLight.copy(alpha = 0.2f),
-                        focusedLabelColor = GoldPrimary,
-                        unfocusedLabelColor = GoldLight.copy(alpha = 0.5f),
-                        focusedLeadingIconColor = GoldPrimary,
-                        unfocusedLeadingIconColor = GoldLight.copy(alpha = 0.4f),
-                        cursorColor = GoldPrimary
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val fieldColors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor       = OnSurfaceDark,
+                        unfocusedTextColor     = OnSurfaceDark.copy(0.9f),
+                        focusedBorderColor     = GoldPrimary,
+                        unfocusedBorderColor   = Color.White.copy(0.1f),
+                        focusedLabelColor      = GoldPrimary,
+                        unfocusedLabelColor    = OnSurfaceDark.copy(0.4f),
+                        focusedLeadingIconColor   = GoldPrimary,
+                        unfocusedLeadingIconColor = GoldPrimary.copy(0.4f),
+                        cursorColor            = GoldPrimary,
+                        focusedContainerColor  = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
                     )
 
-                    // Registration Specific Fields
-                    AnimatedVisibility(isRegisterMode) {
-                        Column {
-                            OutlinedTextField(
-                                value = displayName,
-                                onValueChange = { displayName = it },
-                                label = { Text("Full Name", fontSize = 12.sp) },
-                                leadingIcon = { Icon(Icons.Default.Person, null, modifier = Modifier.size(18.dp)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp),
-                                singleLine = true,
-                                colors = textFieldColors
-                            )
-                            Spacer(Modifier.height(6.dp))
+                    // ── Register-only fields ──────────────────────────────────
+                    AnimatedVisibility(isRegisterMode,
+                        enter = fadeIn() + expandVertically(),
+                        exit  = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            AuthField("Full Name", Icons.Default.Person, displayName,
+                                { displayName = it }, fieldColors)
                         }
                     }
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email Address", fontSize = 12.sp) },
-                        leadingIcon = { Icon(Icons.Default.Email, null, modifier = Modifier.size(18.dp)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        colors = textFieldColors,
-                        enabled = !uiState.isOtpSent // Lock email once OTP is sent
+                    // Email
+                    AuthField("Email Address", Icons.Default.Email, email,
+                        { email = it }, fieldColors,
+                        keyboardType = KeyboardType.Email,
+                        enabled = !uiState.isOtpSent
                     )
 
-                    Spacer(Modifier.height(6.dp))
-
-                    AnimatedVisibility(isRegisterMode) {
-                        Column {
-                            OutlinedTextField(
-                                value = phoneNumber,
-                                onValueChange = { phoneNumber = it },
-                                label = { Text("Phone Number", fontSize = 12.sp) },
-                                leadingIcon = { Icon(Icons.Default.Phone, null, modifier = Modifier.size(18.dp)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                colors = textFieldColors
-                            )
-                            Spacer(Modifier.height(6.dp))
-
-                            OutlinedTextField(
-                                value = address,
-                                onValueChange = { address = it },
-                                label = { Text("Physical Address", fontSize = 12.sp) },
-                                leadingIcon = { Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(18.dp)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp),
-                                singleLine = true,
-                                colors = textFieldColors
-                            )
-                            Spacer(Modifier.height(6.dp))
+                    // Register-only: phone + address
+                    AnimatedVisibility(isRegisterMode,
+                        enter = fadeIn() + expandVertically(),
+                        exit  = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            AuthField("Phone Number", Icons.Default.Phone, phoneNumber,
+                                { phoneNumber = it }, fieldColors, keyboardType = KeyboardType.Phone)
+                            AuthField("Physical Address", Icons.Default.LocationOn, address,
+                                { address = it }, fieldColors)
                         }
                     }
 
+                    // Password
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Password", fontSize = 12.sp) },
+                        label = { Text("Password") },
                         leadingIcon = { Icon(Icons.Default.Lock, null, modifier = Modifier.size(18.dp)) },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    null, tint = GoldLight.copy(alpha = 0.5f), modifier = Modifier.size(18.dp)
+                                    null, modifier = Modifier.size(18.dp)
                                 )
                             }
                         },
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) VisualTransformation.None
+                                               else PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         singleLine = true,
-                        colors = textFieldColors
+                        colors = fieldColors
                     )
 
-                    if (!isRegisterMode) {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                            TextButton(onClick = { showForgotPasswordDialog = true }, contentPadding = PaddingValues(0.dp)) {
-                                Text("Forgot Password?", color = GoldLight, style = MaterialTheme.typography.labelSmall)
+                    // Forgot password (login mode only)
+                    AnimatedVisibility(!isRegisterMode) {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                            TextButton(
+                                onClick = { showForgotPasswordDialog = true },
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("Forgot Password?",
+                                    color = GoldLight.copy(0.7f),
+                                    style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
 
-                    AnimatedVisibility(isRegisterMode) {
-                        Column {
-                            Spacer(Modifier.height(6.dp))
+                    // Confirm password (register mode)
+                    AnimatedVisibility(isRegisterMode,
+                        enter = fadeIn() + expandVertically(),
+                        exit  = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedTextField(
                                 value = confirmPassword,
                                 onValueChange = { confirmPassword = it },
-                                label = { Text("Confirm Password", fontSize = 12.sp) },
+                                label = { Text("Confirm Password") },
                                 leadingIcon = { Icon(Icons.Default.LockClock, null, modifier = Modifier.size(18.dp)) },
-                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                visualTransformation = if (passwordVisible) VisualTransformation.None
+                                                       else PasswordVisualTransformation(),
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
-                                colors = textFieldColors
+                                colors = fieldColors
                             )
+
+                            // ── ID Document upload ────────────────────────────
+                            Text("Identity Verification",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = GoldPrimary.copy(0.8f),
+                                fontWeight = FontWeight.SemiBold)
+                            Text("Upload one of the following (required for first registration):",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = OnSurfaceDark.copy(0.5f))
+
+                            // ID type selector
+                            val idTypes = listOf("Passport", "National ID", "Driver's License", "Kebele ID")
+                            var selectedIdType by remember { mutableStateOf(idTypes[0]) }
+                            var idTypeExpanded by remember { mutableStateOf(false) }
+
+                            Box {
+                                Surface(
+                                    onClick = { idTypeExpanded = true },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color.Transparent,
+                                    border = BorderStroke(1.dp, Color.White.copy(0.1f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Icon(Icons.Default.Badge, null,
+                                            tint = GoldPrimary.copy(0.7f), modifier = Modifier.size(18.dp))
+                                        Text(selectedIdType,
+                                            modifier = Modifier.weight(1f),
+                                            color = OnSurfaceDark,
+                                            style = MaterialTheme.typography.bodyMedium)
+                                        Icon(Icons.Default.ArrowDropDown, null,
+                                            tint = OnSurfaceDark.copy(0.5f))
+                                    }
+                                }
+                                DropdownMenu(
+                                    expanded = idTypeExpanded,
+                                    onDismissRequest = { idTypeExpanded = false },
+                                    modifier = androidx.compose.ui.Modifier
+                                        .background(Color(0xFF0E1B2A))
+                                        .border(1.dp, GoldPrimary.copy(0.2f), RoundedCornerShape(8.dp))
+                                ) {
+                                    idTypes.forEach { type ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(type,
+                                                    color = if (type == selectedIdType) GoldPrimary
+                                                            else OnSurfaceDark)
+                                            },
+                                            onClick = {
+                                                selectedIdType = type
+                                                idTypeExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            // ID image picker
+                            val idImageLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                                contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+                            ) { uri ->
+                                if (uri != null) idDocumentUri = uri
+                            }
+
+                            Surface(
+                                onClick = { idImageLauncher.launch("image/*") },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (idDocumentUri != null) SuccessGreen.copy(0.08f)
+                                        else GoldPrimary.copy(0.05f),
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (idDocumentUri != null) SuccessGreen.copy(0.4f)
+                                    else GoldPrimary.copy(0.25f)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        if (idDocumentUri != null) Icons.Default.CheckCircle
+                                        else Icons.Default.UploadFile,
+                                        null,
+                                        tint = if (idDocumentUri != null) SuccessGreen else GoldPrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            if (idDocumentUri != null) "Document uploaded ✓"
+                                            else "Upload $selectedIdType",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = if (idDocumentUri != null) SuccessGreen
+                                                    else GoldPrimary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            if (idDocumentUri != null) "Tap to change"
+                                            else "Tap to select image",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = OnSurfaceDark.copy(0.4f)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    AnimatedVisibility(isRegisterMode && uiState.isOtpSent) {
+                    // OTP field (register + OTP sent)
+                    AnimatedVisibility(isRegisterMode && uiState.isOtpSent,
+                        enter = fadeIn() + expandVertically(),
+                        exit  = fadeOut() + shrinkVertically()
+                    ) {
                         Column {
-                            Spacer(Modifier.height(6.dp))
                             OutlinedTextField(
                                 value = otpCode,
                                 onValueChange = { otpCode = it },
-                                label = { Text("Enter OTP Code Here", fontSize = 14.sp) },
-                                leadingIcon = { Icon(Icons.Default.VerifiedUser, null, tint = GoldPrimary, modifier = Modifier.size(20.dp)) },
+                                label = { Text("Verification Code") },
+                                leadingIcon = {
+                                    Icon(Icons.Outlined.VerifiedUser, null,
+                                        tint = GoldPrimary, modifier = Modifier.size(18.dp))
+                                },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = GoldPrimary,
-                                    unfocusedBorderColor = GoldPrimary.copy(alpha = 0.5f),
-                                    focusedContainerColor = GoldPrimary.copy(alpha = 0.1f),
-                                    unfocusedContainerColor = GoldPrimary.copy(alpha = 0.1f)
+                                    focusedBorderColor     = GoldPrimary,
+                                    unfocusedBorderColor   = GoldPrimary.copy(0.4f),
+                                    focusedContainerColor  = GoldPrimary.copy(0.06f),
+                                    unfocusedContainerColor = GoldPrimary.copy(0.04f),
+                                    focusedTextColor       = OnSurfaceDark,
+                                    unfocusedTextColor     = OnSurfaceDark
                                 )
                             )
-                            
-                            // Resend OTP Button
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
-                            ) {
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                                 TextButton(
                                     onClick = { viewModel.startRegistration(email.trim(), displayName.trim()) },
                                     enabled = !uiState.isLoading
                                 ) {
-                                    Text("Didn't receive code? Resend", color = GoldPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    Text("Resend Code",
+                                        color = GoldPrimary,
+                                        style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
                     }
 
-                    if (uiState.error != null) {
-                        Text(
-                            uiState.error!!,
-                            color = Color.Red,
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                        )
-                    }
-
-                    if (uiState.message != null) {
-                        Text(
-                            uiState.message!!,
-                            color = SuccessGreen,
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                        )
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    // Buttons Area
-                    Button(
-                        onClick = {
-                            if (isRegisterMode) {
-                                if (!uiState.isOtpSent) {
-                                    viewModel.startRegistration(email.trim(), displayName.trim())
-                                } else {
-                                    viewModel.register(email.trim(), password, confirmPassword, displayName.trim(), phoneNumber.trim(), address.trim(), otpCode.trim())
-                                }
-                            } else {
-                                viewModel.login(email.trim(), password)
+                    // Error / success messages
+                    uiState.error?.let {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFE24A4A).copy(0.1f),
+                            border = BorderStroke(1.dp, Color(0xFFE24A4A).copy(0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.ErrorOutline, null,
+                                    tint = Color(0xFFE24A4A), modifier = Modifier.size(16.dp))
+                                Text(it, color = Color(0xFFE24A4A),
+                                    style = MaterialTheme.typography.labelSmall)
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
-                        enabled = !uiState.isLoading && (
-                            !isRegisterMode || (!uiState.isOtpSent) || (uiState.isOtpSent && otpCode.isNotBlank())
-                        )
-                    ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(color = SurfaceDark, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        } else {
-                            Text(
-                                if (isRegisterMode) {
-                                    if (!uiState.isOtpSent) "CONTINUE TO VERIFY" else "VERIFY & CREATE"
-                                } else "LOGIN",
-                                color = SurfaceDark, fontWeight = FontWeight.Bold
-                            )
                         }
                     }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    // Google Login
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                try {
-                                    val googleIdOption = GetGoogleIdOption.Builder()
-                                        .setFilterByAuthorizedAccounts(false)
-                                        .setServerClientId(context.getString(R.string.default_web_client_id))
-                                        .build()
-
-                                    val request = GetCredentialRequest.Builder()
-                                        .addCredentialOption(googleIdOption)
-                                        .build()
-
-                                    val result = credentialManager.getCredential(context, request)
-                                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
-                                    val googleCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
-                                    
-                                    viewModel.signInWithGoogle(googleCredential)
-                                } catch (e: Exception) {
-                                    // Handle or log error
-                                }
+                    uiState.message?.let {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF50C878).copy(0.1f),
+                            border = BorderStroke(1.dp, Color(0xFF50C878).copy(0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.CheckCircle, null,
+                                    tint = Color(0xFF50C878), modifier = Modifier.size(16.dp))
+                                Text(it, color = Color(0xFF50C878),
+                                    style = MaterialTheme.typography.labelSmall)
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = com.gohahotel.connect.R.drawable.ic_google),
-                                contentDescription = null,
-                                tint = Color.Unspecified,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Google Sign In", color = Color(0xFF1F1F1F), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                         }
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    // Continue as Guest Button
-                    OutlinedButton(
-                        onClick = { viewModel.signInAsGuest() },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.4f))
-                    ) {
-                        Text("CONTINUE AS GUEST", color = GoldPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    TextButton(
-                        onClick = { isRegisterMode = !isRegisterMode },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            if (isRegisterMode) "Already have an account? Sign In" else "New to Goha? Create Account",
-                            color = GoldLight.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.labelSmall
-                        )
                     }
                 }
             }
-            
-            Spacer(Modifier.height(20.dp))
+
+            Spacer(Modifier.height(14.dp))
+
+            // ── Primary action button ─────────────────────────────────────────
+            Button(
+                onClick = {
+                    if (isRegisterMode) {
+                        if (!uiState.isOtpSent) viewModel.startRegistration(email.trim(), displayName.trim())
+                        else viewModel.register(email.trim(), password, confirmPassword,
+                            displayName.trim(), phoneNumber.trim(), address.trim(), otpCode.trim())
+                    } else {
+                        viewModel.login(email.trim(), password)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
+                enabled = !uiState.isLoading && (
+                    !isRegisterMode || !uiState.isOtpSent || (uiState.isOtpSent && otpCode.isNotBlank())
+                )
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(color = Color(0xFF050D18),
+                        modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        when {
+                            !isRegisterMode       -> "Sign In"
+                            !uiState.isOtpSent    -> "Continue to Verify"
+                            else                  -> "Verify & Create Account"
+                        },
+                        color = Color(0xFF050D18),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // ── Google Sign-In ────────────────────────────────────────────────
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        try {
+                            val googleIdOption = GetGoogleIdOption.Builder()
+                                .setFilterByAuthorizedAccounts(false)
+                                .setServerClientId(context.getString(R.string.default_web_client_id))
+                                .build()
+                            val request = GetCredentialRequest.Builder()
+                                .addCredentialOption(googleIdOption)
+                                .build()
+                            val result = credentialManager.getCredential(context, request)
+                            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
+                            val googleCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
+                            viewModel.signInWithGoogle(googleCredential)
+                        } catch (_: Exception) {}
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_google),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Text("Continue with Google",
+                    color = Color(0xFF1F1F1F),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp)
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // ── Continue as Guest ─────────────────────────────────────────────
+            OutlinedButton(
+                onClick = { viewModel.signInAsGuest() },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, GoldPrimary.copy(0.35f)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = GoldPrimary.copy(0.05f)
+                )
+            ) {
+                Icon(Icons.Default.PersonOutline, null,
+                    tint = GoldPrimary, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Continue as Guest",
+                    color = GoldPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp)
+            }
+
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Guests can browse but must sign in to book rooms or order food",
+                style = MaterialTheme.typography.labelSmall,
+                color = OnSurfaceDark.copy(0.35f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(Modifier.height(32.dp))
 
             // Footer
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "High Above the Historic City of Gondar",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = GoldLight.copy(alpha = 0.5f),
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                )
-                Row(modifier = Modifier.padding(top = 4.dp)) {
-                    repeat(5) { Icon(Icons.Default.Star, null, tint = GoldPrimary, modifier = Modifier.size(10.dp)) }
-                }
-            }
+            Row { repeat(5) { Icon(Icons.Default.Star, null, tint = GoldPrimary.copy(0.4f), modifier = Modifier.size(10.dp)) } }
+            Spacer(Modifier.height(4.dp))
+            Text("High Above the Historic City of Gondar",
+                style = MaterialTheme.typography.labelSmall,
+                color = GoldLight.copy(0.3f),
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
 
+// ── Shared field composable ───────────────────────────────────────────────────
+@Composable
+private fun AuthField(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    value: String,
+    onValueChange: (String) -> Unit,
+    colors: TextFieldColors,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    enabled: Boolean = true
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        leadingIcon = { Icon(icon, null, modifier = Modifier.size(18.dp)) },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = colors,
+        enabled = enabled
+    )
+}
+
+// ── Forgot Password Dialog ────────────────────────────────────────────────────
 @Composable
 fun ForgotPasswordDialog(
     uiState: AuthUiState,
@@ -418,64 +631,56 @@ fun ForgotPasswordDialog(
     var email by remember { mutableStateOf("") }
 
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = CardDark),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            color = Color(0xFF0E1B2A),
+            border = BorderStroke(1.dp, GoldPrimary.copy(0.2f))
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = null,
-                    tint = GoldPrimary,
-                    modifier = Modifier.size(48.dp).padding(bottom = 8.dp)
-                )
-                Text(
-                    text = "Reset Password",
+                Box(
+                    modifier = Modifier.size(52.dp).background(GoldPrimary.copy(0.12f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Lock, null, tint = GoldPrimary, modifier = Modifier.size(26.dp))
+                }
+                Text("Reset Password",
                     style = MaterialTheme.typography.titleLarge,
-                    color = GoldPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "Enter your registered email address and we will send you a secure link to reset your password.",
+                    color = GoldPrimary, fontWeight = FontWeight.Bold)
+                Text("Enter your email and we'll send a reset link.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceDark.copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(Modifier.height(24.dp))
+                    color = OnSurfaceDark.copy(0.6f),
+                    textAlign = TextAlign.Center)
 
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email Address") },
-                    leadingIcon = { Icon(Icons.Default.Email, null, tint = GoldPrimary.copy(alpha = 0.7f)) },
+                    leadingIcon = { Icon(Icons.Default.Email, null, tint = GoldPrimary.copy(0.7f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = OnSurfaceDark,
-                        unfocusedTextColor = OnSurfaceDark,
-                        focusedBorderColor = GoldPrimary,
-                        unfocusedBorderColor = GoldLight.copy(alpha = 0.2f),
-                        focusedContainerColor = GoldPrimary.copy(alpha = 0.05f),
+                        focusedTextColor       = OnSurfaceDark,
+                        unfocusedTextColor     = OnSurfaceDark,
+                        focusedBorderColor     = GoldPrimary,
+                        unfocusedBorderColor   = Color.White.copy(0.1f),
+                        focusedContainerColor  = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent
                     )
                 )
 
-                Spacer(Modifier.height(16.dp))
-
-                if (uiState.error != null) {
-                    Text(uiState.error, color = Color.Red, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(8.dp))
+                uiState.error?.let {
+                    Text(it, color = Color(0xFFE24A4A),
+                        style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
                 }
-                if (uiState.message != null) {
-                    Text(uiState.message, color = SuccessGreen, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(8.dp))
+                uiState.message?.let {
+                    Text(it, color = Color(0xFF50C878),
+                        style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
                 }
 
                 Button(
@@ -485,16 +690,15 @@ fun ForgotPasswordDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
                 ) {
                     if (uiState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = SurfaceDark, strokeWidth = 2.dp)
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp),
+                            color = Color(0xFF050D18), strokeWidth = 2.dp)
                     } else {
-                        Text("Send Reset Link", color = SurfaceDark, fontWeight = FontWeight.Bold)
+                        Text("Send Reset Link",
+                            color = Color(0xFF050D18), fontWeight = FontWeight.Bold)
                     }
                 }
-
-                Spacer(Modifier.height(12.dp))
-
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (uiState.message != null) "Close" else "Cancel", color = GoldLight)
+                    Text(if (uiState.message != null) "Close" else "Cancel", color = GoldLight.copy(0.7f))
                 }
             }
         }

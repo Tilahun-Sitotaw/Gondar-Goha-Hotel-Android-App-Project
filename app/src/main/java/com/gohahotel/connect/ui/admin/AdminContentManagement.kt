@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,15 +19,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.gohahotel.connect.domain.model.GuideCategory
 import com.gohahotel.connect.domain.model.GuideEntry
 import com.gohahotel.connect.ui.theme.*
+
+private fun guideCategoryColor(cat: GuideCategory): Color = when (cat) {
+    GuideCategory.HERITAGE  -> Color(0xFFD4A843)
+    GuideCategory.CHURCHES  -> Color(0xFF9B59B6)
+    GuideCategory.MARKETS   -> Color(0xFFE29B4A)
+    GuideCategory.NATURE    -> Color(0xFF50C878)
+    GuideCategory.HISTORY   -> Color(0xFF4A90E2)
+    GuideCategory.DINING    -> Color(0xFFE24A8A)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,41 +48,76 @@ fun AdminContentManagement(
     val guideEntries by viewModel.guideEntries.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var editingEntry by remember { mutableStateOf<GuideEntry?>(null) }
+    var entryToDelete by remember { mutableStateOf<GuideEntry?>(null) }
 
     Scaffold(
+        containerColor = SurfaceDark,
         topBar = {
             TopAppBar(
-                title = { Text("Content & Experiences") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+                title = {
+                    Column {
+                        Text("Cultural Experiences", color = OnSurfaceDark,
+                            fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text("${guideEntries.size} entries",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF9B59B6).copy(alpha = 0.8f))
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = GoldPrimary)
+                    }
+                },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, null, tint = GoldPrimary)
+                        Box(
+                            modifier = Modifier.size(36.dp).background(Color(0xFF9B59B6), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        }
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
             )
         }
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0A1424), Color.Black)))
+                .background(Brush.verticalGradient(listOf(SurfaceDark, Color(0xFF0D0A1A), Color(0xFF050D18))))
                 .padding(padding)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-            items(guideEntries) { entry ->
-                AdminContentItem(
-                    entry = entry,
-                    onEdit = { editingEntry = entry },
-                    onDelete = { viewModel.deleteGuideEntry(entry.id) }
-                )
+            if (guideEntries.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(Icons.Default.Place, null, tint = Color(0xFF9B59B6).copy(0.3f),
+                        modifier = Modifier.size(64.dp))
+                    Spacer(Modifier.height(16.dp))
+                    Text("No experiences yet", color = OnSurfaceDark.copy(0.5f), fontWeight = FontWeight.Bold)
+                    Text("Tap + to add a cultural experience", color = OnSurfaceDark.copy(0.3f),
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    items(guideEntries, key = { it.id }) { entry ->
+                        AdminCulturalCard(
+                            entry = entry,
+                            onEdit = { editingEntry = entry },
+                            onDelete = { entryToDelete = entry }
+                        )
+                    }
+                }
             }
         }
     }
-}
 
     if (showAddDialog) {
         AddContentDialog(
@@ -85,66 +129,104 @@ fun AdminContentManagement(
         )
     }
 
-    if (editingEntry != null) {
+    editingEntry?.let { entry ->
         AddContentDialog(
-            entryToEdit = editingEntry,
+            entryToEdit = entry,
             onDismiss = { editingEntry = null },
-            onConfirm = { updatedEntry ->
-                viewModel.saveGuideEntry(updatedEntry)
+            onConfirm = { updated ->
+                viewModel.saveGuideEntry(updated)
                 editingEntry = null
+            }
+        )
+    }
+
+    entryToDelete?.let { entry ->
+        AlertDialog(
+            onDismissRequest = { entryToDelete = null },
+            containerColor = Color(0xFF0D0A1A),
+            title = { Text("Delete Experience?", color = Color(0xFFE24A4A), fontWeight = FontWeight.Bold) },
+            text = { Text("Remove \"${entry.title}\" permanently?", color = OnSurfaceDark.copy(0.8f)) },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.deleteGuideEntry(entry.id); entryToDelete = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE24A4A))
+                ) { Text("Delete", color = Color.White) }
+            },
+            dismissButton = {
+                TextButton(onClick = { entryToDelete = null }) { Text("Cancel", color = GoldPrimary) }
             }
         )
     }
 }
 
 @Composable
-private fun AdminContentItem(entry: GuideEntry, onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun AdminCulturalCard(entry: GuideEntry, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val accent = guideCategoryColor(entry.category)
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onEdit() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardDark)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF100D1E)),
+        border = BorderStroke(1.dp, accent.copy(0.25f))
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val img = entry.imageUrls.firstOrNull() ?: ""
-            if (img.isNotEmpty()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(img)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = null,
-                    modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Surface(
-                    modifier = Modifier.size(70.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.White.copy(0.05f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Info, null, tint = GoldPrimary.copy(0.3f))
+        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(76.dp).clip(RoundedCornerShape(14.dp)).background(accent.copy(0.1f))
+            ) {
+                val img = entry.imageUrls.firstOrNull() ?: entry.imageUrl
+                if (img.isNotEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current).data(img).crossfade(true).build(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(entry.category.icon, fontSize = 28.sp)
                     }
                 }
             }
-            Spacer(Modifier.width(12.dp))
+
+            Spacer(Modifier.width(14.dp))
+
             Column(modifier = Modifier.weight(1f)) {
-                Text(entry.title, fontWeight = FontWeight.Bold, color = GoldPrimary)
-                Text(entry.category.displayName, style = MaterialTheme.typography.bodySmall, color = OnSurfaceDark.copy(alpha = 0.6f))
+                Text(entry.title, fontWeight = FontWeight.ExtraBold, color = OnSurfaceDark, fontSize = 15.sp)
+                Spacer(Modifier.height(4.dp))
+                Surface(shape = RoundedCornerShape(6.dp), color = accent.copy(0.18f)) {
+                    Text(
+                        "${entry.category.icon} ${entry.category.displayName}",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = accent, fontWeight = FontWeight.Bold
+                    )
+                }
+                if (entry.summary.isNotBlank()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(entry.summary, style = MaterialTheme.typography.bodySmall,
+                        color = OnSurfaceDark.copy(0.5f), maxLines = 2)
+                }
+                if (entry.distanceFromHotelKm > 0) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("📍 ${entry.distanceFromHotelKm} km from hotel",
+                        style = MaterialTheme.typography.labelSmall, color = accent.copy(0.7f))
+                }
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, null, tint = GoldLight)
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, null, tint = Color.Red.copy(alpha = 0.7f))
+
+            Column {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, null, tint = GoldLight)
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, null, tint = Color(0xFFE24A4A).copy(0.8f))
+                }
             }
         }
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Add / Edit Cultural Experience Dialog
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun AddContentDialog(
     viewModel: AdminViewModel = hiltViewModel(),
@@ -152,49 +234,93 @@ fun AddContentDialog(
     onDismiss: () -> Unit,
     onConfirm: (GuideEntry) -> Unit
 ) {
-    var title by remember { mutableStateOf(entryToEdit?.title ?: "") }
-    var summary by remember { mutableStateOf(entryToEdit?.summary ?: "") }
-    var category by remember { mutableStateOf(entryToEdit?.category ?: GuideCategory.HERITAGE) }
-    var imageUrls by remember { mutableStateOf<List<String>>(entryToEdit?.imageUrls ?: emptyList()) }
-    var expanded by remember { mutableStateOf(false) }
+    var title       by remember { mutableStateOf(entryToEdit?.title ?: "") }
+    var summary     by remember { mutableStateOf(entryToEdit?.summary ?: "") }
+    var content     by remember { mutableStateOf(entryToEdit?.content ?: "") }
+    var category    by remember { mutableStateOf(entryToEdit?.category ?: GuideCategory.HERITAGE) }
+    var distance    by remember { mutableStateOf(entryToEdit?.distanceFromHotelKm?.toString() ?: "") }
+    var entryFee    by remember { mutableStateOf(entryToEdit?.entryFee ?: "") }
+    var openingHours by remember { mutableStateOf(entryToEdit?.openingHours ?: "") }
+    var imageUrls   by remember { mutableStateOf<List<String>>(entryToEdit?.imageUrls ?: emptyList()) }
+    var validationError by remember { mutableStateOf<String?>(null) }
+
+    // Dedicated upload state — not shared isLoading
+    val isUploading by viewModel.isUploading.collectAsState()
+    val uploadError by viewModel.uploadError.collectAsState()
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
-            viewModel.uploadImage(it, "guide") { url ->
-                imageUrls = imageUrls + url
-            }
+            validationError = null
+            viewModel.uploadImage(it, "guide") { url -> imageUrls = imageUrls + url }
         }
     }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (entryToEdit == null) "Add New Experience" else "Edit Experience") },
+        containerColor = Color(0xFF100D1E),
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(36.dp).background(Color(0xFF9B59B6).copy(0.2f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) { Icon(Icons.Default.Place, null, tint = Color(0xFF9B59B6), modifier = Modifier.size(20.dp)) }
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    if (entryToEdit == null) "Add Experience" else "Edit Experience",
+                    color = Color(0xFFBB86FC), fontWeight = FontWeight.ExtraBold
+                )
+            }
+        },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title (e.g., Sunset Experience)") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = summary, onValueChange = { summary = it }, label = { Text("Summary/Description") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
-                
-                Box {
-                    OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Category: ${category.displayName}")
-                    }
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        GuideCategory.entries.forEach { guideCategory ->
-                            DropdownMenuItem(
-                                text = { Text(guideCategory.displayName) },
-                                onClick = {
-                                    category = guideCategory
-                                    expanded = false
-                                }
+                // Category selector
+                Text("Category", style = MaterialTheme.typography.labelMedium, color = Color(0xFFBB86FC).copy(0.8f))
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    GuideCategory.entries.forEach { cat ->
+                        val accent = guideCategoryColor(cat)
+                        val selected = category == cat
+                        Surface(
+                            onClick = { category = cat },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selected) accent.copy(0.25f) else Color.White.copy(0.05f),
+                            border = BorderStroke(1.dp, if (selected) accent else Color.White.copy(0.1f))
+                        ) {
+                            Text(
+                                "${cat.icon} ${cat.displayName}",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (selected) accent else OnSurfaceDark.copy(0.5f),
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                             )
                         }
                     }
                 }
 
-                Text("Images", style = MaterialTheme.typography.labelMedium)
+                ColoredTextField(value = title, onValueChange = { title = it; validationError = null },
+                    label = "Title (e.g. Fasilides Castle)", icon = Icons.Default.Place)
+                ColoredTextField(value = summary, onValueChange = { summary = it; validationError = null },
+                    label = "Short Summary", icon = Icons.Default.Info, minLines = 2)
+                ColoredTextField(value = content, onValueChange = { content = it },
+                    label = "Full Description (optional)", icon = Icons.Default.Description, minLines = 3)
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ColoredTextField(value = distance, onValueChange = { distance = it },
+                        label = "Distance (km)", icon = Icons.Default.NearMe, modifier = Modifier.weight(1f))
+                    ColoredTextField(value = entryFee, onValueChange = { entryFee = it },
+                        label = "Entry Fee", icon = Icons.Default.AttachMoney, modifier = Modifier.weight(1f))
+                }
+                ColoredTextField(value = openingHours, onValueChange = { openingHours = it },
+                    label = "Opening Hours (e.g. 8am–5pm)", icon = Icons.Default.Schedule)
+
+                // Images
+                Text("Photos", style = MaterialTheme.typography.labelMedium, color = Color(0xFFBB86FC).copy(0.8f))
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -202,73 +328,94 @@ fun AddContentDialog(
                     imageUrls.forEach { url ->
                         Box {
                             AsyncImage(
-                                model = url,
-                                contentDescription = null,
-                                modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)),
+                                model = url, contentDescription = null,
+                                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp)),
                                 contentScale = ContentScale.Crop
                             )
                             IconButton(
                                 onClick = { imageUrls = imageUrls - url },
-                                modifier = Modifier.size(20.dp).align(Alignment.TopEnd).background(Color.Black.copy(0.5f), CircleShape)
+                                modifier = Modifier.size(20.dp).align(Alignment.TopEnd)
+                                    .background(Color(0xFFE24A4A), CircleShape)
                             ) {
                                 Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(12.dp))
                             }
                         }
                     }
                     Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.1f))
-                            .clickable { launcher.launch("image/*") },
+                        modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
+                            .background(if (isUploading) Color(0xFF9B59B6).copy(0.05f) else Color(0xFF9B59B6).copy(0.12f))
+                            .border(1.dp, Color(0xFF9B59B6).copy(if (isUploading) 0.1f else 0.3f), RoundedCornerShape(10.dp))
+                            .clickable(enabled = !isUploading) { launcher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.AddAPhoto, null, tint = GoldPrimary)
+                        if (isUploading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp),
+                                color = Color(0xFFBB86FC), strokeWidth = 2.dp)
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.AddAPhoto, null, tint = Color(0xFFBB86FC), modifier = Modifier.size(20.dp))
+                                Text("Add", style = MaterialTheme.typography.labelSmall, color = Color(0xFFBB86FC))
+                            }
+                        }
                     }
+                }
+                if (isUploading) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFFBB86FC), trackColor = Color(0xFF9B59B6).copy(0.15f))
+                    Text("⏳ Uploading, please wait...",
+                        color = Color(0xFFBB86FC), style = MaterialTheme.typography.labelSmall)
+                }
+                if (imageUrls.isNotEmpty()) {
+                    Text("✅ ${imageUrls.size} photo(s) attached",
+                        color = Color(0xFF50C878), style = MaterialTheme.typography.labelSmall)
+                }
+                uploadError?.let {
+                    Text("⚠ $it", color = Color(0xFFE24A4A), style = MaterialTheme.typography.labelSmall)
+                }
+                validationError?.let {
+                    Text(it, color = Color(0xFFE24A4A), style = MaterialTheme.typography.labelSmall)
                 }
             }
         },
         confirmButton = {
-            var validationError by remember { mutableStateOf<String?>(null) }
-            
-            LaunchedEffect(imageUrls.size, title, summary) {
-                validationError = null
-            }
-            
-            Column(horizontalAlignment = Alignment.End) {
-                if (validationError != null) {
-                    Text(validationError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 4.dp))
-                }
-                Button(onClick = { 
-                    if (title.isBlank()) {
-                        validationError = "Title is required"
-                        return@Button
+            Button(
+                onClick = {
+                    when {
+                        title.isBlank()     -> validationError = "Title is required"
+                        summary.isBlank()   -> validationError = "Summary is required"
+                        isUploading         -> validationError = "Please wait — photo is still uploading"
+                        imageUrls.isEmpty() -> validationError = "At least one photo is required"
+                        else -> onConfirm(
+                            (entryToEdit ?: GuideEntry()).copy(
+                                title               = title,
+                                summary             = summary,
+                                content             = content,
+                                category            = category,
+                                distanceFromHotelKm = distance.toDoubleOrNull() ?: 0.0,
+                                entryFee            = entryFee,
+                                openingHours        = openingHours,
+                                imageUrls           = imageUrls
+                            )
+                        )
                     }
-                    if (summary.isBlank()) {
-                        validationError = "Summary is required"
-                        return@Button
-                    }
-                    if (imageUrls.isEmpty() && !viewModel.isLoading.value) {
-                        validationError = "At least one image is required"
-                        return@Button
-                    }
-                    onConfirm((entryToEdit ?: GuideEntry()).copy(
-                        title = title, 
-                        summary = summary,
-                        category = category,
-                        imageUrls = imageUrls
-                    )) 
-                }) {
-                    if (viewModel.isLoading.value) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = SurfaceDark, strokeWidth = 2.dp)
-                    } else {
-                        Text(if (entryToEdit == null) "Add Experience" else "Update Experience")
-                    }
+                },
+                enabled = !isUploading,
+                colors  = ButtonDefaults.buttonColors(containerColor = Color(0xFF9B59B6)),
+                shape   = RoundedCornerShape(12.dp)
+            ) {
+                if (isUploading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Icon(if (entryToEdit == null) Icons.Default.Add else Icons.Default.Check,
+                        null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (entryToEdit == null) "Add Experience" else "Update Experience",
+                        color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = OnSurfaceDark.copy(0.6f)) }
         }
     )
 }

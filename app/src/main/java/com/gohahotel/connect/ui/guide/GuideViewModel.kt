@@ -30,6 +30,10 @@ class GuideViewModel @Inject constructor(
     init {
         loadEntries()
         loadNearby()
+        // Sync from Firestore on every launch
+        viewModelScope.launch {
+            try { guideRepository.initializeGuide() } catch (_: Exception) {}
+        }
     }
 
     private fun loadEntries() {

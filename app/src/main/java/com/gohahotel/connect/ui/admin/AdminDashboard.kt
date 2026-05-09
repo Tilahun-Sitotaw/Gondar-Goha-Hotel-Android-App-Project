@@ -31,6 +31,7 @@ fun AdminDashboard(
     onNavigateToUsers: () -> Unit,
     onNavigateToPromotions: () -> Unit,
     onNavigateToContent: () -> Unit,
+    onNavigateToChat: () -> Unit = {},
     onLogout: () -> Unit,
     onBack: () -> Unit,
     viewModel: AdminViewModel = hiltViewModel()
@@ -154,6 +155,18 @@ fun AdminDashboard(
                             modifier = Modifier.weight(1f),
                             onClick = onNavigateToContent
                         )
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        DashboardToolCard(
+                            title = "Guest Chat",
+                            subtitle = "Messages",
+                            icon = Icons.Default.Chat,
+                            color = Color(0xFF4A90E2),
+                            modifier = Modifier.weight(1f),
+                            onClick = onNavigateToChat
+                        )
+                        Spacer(Modifier.weight(1f))
                     }
                 }
 
