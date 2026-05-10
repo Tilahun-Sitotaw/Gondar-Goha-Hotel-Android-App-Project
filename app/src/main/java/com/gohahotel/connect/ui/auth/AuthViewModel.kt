@@ -103,27 +103,38 @@ class AuthViewModel @Inject constructor(
                 return@launch
             }
 
-            // Store registration data temporarily for verification
-            _uiState.update {
-                it.copy(
-                    isLoading    = false,
-                    isOtpSent    = true,
-                    generatedOtp = otp,
-                    userEmail    = email,
-                    message      = "Your verification code is: $otp\n\nPlease enter this code below to complete registration."
-                )
-            }
-            
-            // Store other registration data in a temporary map for later use
-            tempRegistrationData = mapOf(
-                "email" to email,
-                "password" to password,
-                "displayName" to displayName,
-                "phoneNumber" to phoneNumber,
-                "address" to address,
-                "idDocumentUrl" to idDocUrl,
-                "idDocumentType" to idDocumentType
-            )
+            // Try to send OTP email
+            emailService.sendOtpEmail(email, otp, displayName)
+                .onSuccess {
+                    // Email sent successfully
+                    _uiState.update {
+                        it.copy(
+                            isLoading    = false,
+                            isOtpSent    = true,
+                            generatedOtp = otp,
+                            userEmail    = email,
+                            message      = "A 6-digit verification code has been sent to $email. Please check your inbox and enter the code below."
+                        )
+                    }
+                    // Store registration data for verification
+                    tempRegistrationData = mapOf(
+                        "email" to email,
+                        "password" to password,
+                        "displayName" to displayName,
+                        "phoneNumber" to phoneNumber,
+                        "address" to address,
+                        "idDocumentUrl" to idDocUrl,
+                        "idDocumentType" to idDocumentType
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Failed to send verification email. Please check your email address and try again. Error: ${e.message}"
+                        )
+                    }
+                }
         }
     }
 
@@ -185,7 +196,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ─── Resend OTP ───────────────────────────────────────────────────────────
+    // ─── Resend OTP email ─────────────────────────────────────────────────────
     fun resendOtp() {
         val email = _uiState.value.userEmail
         val displayName = tempRegistrationData["displayName"] ?: "Guest"
@@ -201,13 +212,24 @@ class AuthViewModel @Inject constructor(
             // Generate new OTP
             val otp = (100000..999999).random().toString()
             
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    generatedOtp = otp,
-                    message = "New verification code: $otp\n\nPlease enter this code below."
-                )
-            }
+            emailService.sendOtpEmail(email, otp, displayName)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            generatedOtp = otp,
+                            message = "New verification code sent to $email. Please check your inbox."
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            error = "Failed to resend code: ${e.message}"
+                        ) 
+                    }
+                }
         }
     }
 

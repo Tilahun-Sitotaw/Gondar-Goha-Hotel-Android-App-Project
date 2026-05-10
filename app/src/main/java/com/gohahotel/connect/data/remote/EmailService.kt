@@ -23,6 +23,9 @@ class EmailService @Inject constructor() {
                 put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
                 put("mail.smtp.auth", "true")
                 put("mail.smtp.port", "465")
+                put("mail.smtp.ssl.enable", "true")
+                put("mail.smtp.ssl.trust", "smtp.gmail.com")
+                put("mail.debug", "false")
             }
 
             val session = Session.getInstance(props, object : Authenticator() {
@@ -32,18 +35,39 @@ class EmailService @Inject constructor() {
             })
 
             val message = MimeMessage(session).apply {
-                setFrom(InternetAddress(adminEmail))
+                setFrom(InternetAddress(adminEmail, "Goha Hotel"))
                 addRecipient(Message.RecipientType.TO, InternetAddress(recipientEmail))
-                subject = "Welcome to Goha Hotel - Your Verification Code"
+                subject = "Goha Hotel - Your Verification Code"
                 setContent("""
-                    <div style="font-family: Arial, sans-serif; color: #333;">
-                        <h2 style="color: #D4AF37;">Welcome to Goha Hotel, $displayName!</h2>
-                        <p>Thank you for registering with us.</p>
-                        <p>To complete your registration, please use the following verification code:</p>
-                        <h3 style="background-color: #f4f4f4; padding: 10px; display: inline-block; letter-spacing: 2px;">$otp</h3>
-                        <p>If you did not request this, please ignore this email.</p>
-                        <br/>
-                        <p>Best Regards,<br/>Goha Hotel Team</p>
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0A1424; color: #FDFBF7; padding: 32px; border-radius: 16px;">
+                        <div style="text-align: center; margin-bottom: 24px;">
+                            <div style="background: #D4A843; display: inline-block; padding: 12px 24px; border-radius: 8px; margin-bottom: 8px;">
+                                <span style="color: #050D18; font-size: 22px; font-weight: 900; letter-spacing: 3px;">GOHA HOTEL</span>
+                            </div>
+                            <p style="color: #D4A843; letter-spacing: 2px; margin: 6px 0 0 0; font-size: 12px;">GONDAR · ETHIOPIA</p>
+                        </div>
+                        
+                        <h2 style="color: #D4A843; text-align: center; margin: 24px 0;">Welcome, $displayName!</h2>
+                        
+                        <p style="text-align: center; color: #FDFBF7; margin-bottom: 24px;">
+                            Thank you for registering with Goha Hotel. To complete your registration, please use the verification code below:
+                        </p>
+                        
+                        <div style="background: #0E1B2A; border: 2px solid #D4A843; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+                            <p style="color: #D4A843; font-size: 14px; margin: 0 0 8px 0; font-weight: bold;">Your Verification Code</p>
+                            <div style="font-size: 36px; font-weight: bold; color: #D4A843; letter-spacing: 8px; margin: 12px 0;">$otp</div>
+                            <p style="color: #FDFBF799; font-size: 12px; margin: 8px 0 0 0;">This code is valid for 10 minutes</p>
+                        </div>
+                        
+                        <p style="color: #FDFBF799; font-size: 13px; text-align: center; margin: 24px 0;">
+                            If you did not request this verification code, please ignore this email.
+                        </p>
+                        
+                        <div style="text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #D4A84330;">
+                            <p style="color: #D4A84366; font-size: 11px; margin: 0;">
+                                © Goha Hotel · High Above the Historic City of Gondar
+                            </p>
+                        </div>
                     </div>
                 """.trimIndent(), "text/html; charset=utf-8")
             }
@@ -51,6 +75,7 @@ class EmailService @Inject constructor() {
             Transport.send(message)
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("EmailService", "Failed to send OTP email", e)
             Result.failure(e)
         }
     }
