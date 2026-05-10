@@ -74,6 +74,18 @@ fun LoginScreen(
         if (uiState.isSuccess) onLoginSuccess(uiState.userRole)
     }
 
+    // ── Email verification step — shown after account creation ────────────────
+    if (uiState.isVerificationSent) {
+        EmailVerificationScreen(
+            email      = email,
+            uiState    = uiState,
+            onResend   = { viewModel.resendVerificationEmail() },
+            onVerified = { viewModel.checkVerificationAndProceed() },
+            onBack     = { viewModel.resetState() }
+        )
+        return
+    }
+
     if (showForgotDialog) {
         ForgotPasswordDialog(
             uiState   = uiState,
@@ -453,8 +465,14 @@ fun LoginScreen(
                 onClick = {
                     if (isRegisterMode) {
                         viewModel.register(
-                            email.trim(), password, confirmPassword,
-                            displayName.trim(), phoneNumber.trim(), address.trim()
+                            email          = email.trim(),
+                            password       = password,
+                            confirmPassword = confirmPassword,
+                            displayName    = displayName.trim(),
+                            phoneNumber    = phoneNumber.trim(),
+                            address        = address.trim(),
+                            idDocumentUri  = idDocumentUri,
+                            idDocumentType = selectedIdType
                         )
                     } else {
                         viewModel.login(email.trim(), password)
@@ -624,6 +642,216 @@ fun ForgotPasswordDialog(
                     Text(if (uiState.message != null) "Close" else "Cancel", color = GoldLight.copy(0.7f))
                 }
             }
+        }
+    }
+}
+
+// ── Email Verification Screen ─────────────────────────────────────────────────
+@Composable
+fun EmailVerificationScreen(
+    email: String,
+    uiState: AuthUiState,
+    onResend: () -> Unit,
+    onVerified: () -> Unit,
+    onBack: () -> Unit
+) {
+    Box(
+        modifier = androidx.compose.ui.Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF071520), Color(0xFF050D18), Color.Black)
+                )
+            )
+    ) {
+        Column(
+            modifier = androidx.compose.ui.Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(androidx.compose.ui.Modifier.height(80.dp))
+
+            // Email icon
+            Box(
+                modifier = androidx.compose.ui.Modifier
+                    .size(88.dp)
+                    .background(GoldPrimary.copy(0.12f), CircleShape)
+                    .border(2.dp, GoldPrimary.copy(0.3f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("📧", fontSize = 40.sp)
+            }
+
+            Spacer(androidx.compose.ui.Modifier.height(24.dp))
+
+            Text(
+                "Verify Your Email",
+                style = MaterialTheme.typography.headlineSmall,
+                color = GoldPrimary,
+                fontWeight = FontWeight.ExtraBold
+            )
+
+            Spacer(androidx.compose.ui.Modifier.height(12.dp))
+
+            Text(
+                "We've sent a verification link to:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = OnSurfaceDark.copy(0.6f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(androidx.compose.ui.Modifier.height(6.dp))
+
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = GoldPrimary.copy(0.1f),
+                border = BorderStroke(1.dp, GoldPrimary.copy(0.3f))
+            ) {
+                Text(
+                    email,
+                    modifier = androidx.compose.ui.Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GoldPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(androidx.compose.ui.Modifier.height(20.dp))
+
+            // Instructions card
+            Surface(
+                modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF0E1B2A),
+                border = BorderStroke(1.dp, Color.White.copy(0.06f))
+            ) {
+                Column(
+                    modifier = androidx.compose.ui.Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    listOf(
+                        "1️⃣" to "Open your email inbox",
+                        "2️⃣" to "Find the email from Goha Hotel",
+                        "3️⃣" to "Click the verification link",
+                        "4️⃣" to "Come back here and tap 'I've Verified'"
+                    ).forEach { (emoji, step) ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(emoji, fontSize = 18.sp)
+                            Text(
+                                step,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = OnSurfaceDark.copy(0.8f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(androidx.compose.ui.Modifier.height(20.dp))
+
+            // Error / success banners
+            uiState.error?.let { err ->
+                Surface(
+                    modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    color = ErrorRed.copy(0.1f),
+                    border = BorderStroke(1.dp, ErrorRed.copy(0.3f))
+                ) {
+                    Row(
+                        modifier = androidx.compose.ui.Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(Icons.Default.ErrorOutline, null,
+                            tint = ErrorRed, modifier = androidx.compose.ui.Modifier.size(16.dp))
+                        Text(err, color = ErrorRed, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                Spacer(androidx.compose.ui.Modifier.height(8.dp))
+            }
+
+            uiState.message?.let { msg ->
+                Surface(
+                    modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    color = SuccessGreen.copy(0.1f),
+                    border = BorderStroke(1.dp, SuccessGreen.copy(0.3f))
+                ) {
+                    Row(
+                        modifier = androidx.compose.ui.Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(Icons.Default.CheckCircle, null,
+                            tint = SuccessGreen, modifier = androidx.compose.ui.Modifier.size(16.dp))
+                        Text(msg, color = SuccessGreen, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                Spacer(androidx.compose.ui.Modifier.height(8.dp))
+            }
+
+            // "I've Verified" button
+            Button(
+                onClick = onVerified,
+                modifier = androidx.compose.ui.Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
+                enabled = !uiState.isLoading
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF050D18),
+                        modifier = androidx.compose.ui.Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Default.VerifiedUser, null,
+                        tint = Color(0xFF050D18),
+                        modifier = androidx.compose.ui.Modifier.size(18.dp))
+                    Spacer(androidx.compose.ui.Modifier.width(8.dp))
+                    Text(
+                        "I've Verified My Email",
+                        color = Color(0xFF050D18),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+
+            Spacer(androidx.compose.ui.Modifier.height(10.dp))
+
+            // Resend button
+            OutlinedButton(
+                onClick = onResend,
+                modifier = androidx.compose.ui.Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, GoldPrimary.copy(0.35f)),
+                enabled = !uiState.isLoading
+            ) {
+                Icon(Icons.Default.Refresh, null,
+                    tint = GoldPrimary, modifier = androidx.compose.ui.Modifier.size(16.dp))
+                Spacer(androidx.compose.ui.Modifier.width(8.dp))
+                Text("Resend Verification Email", color = GoldPrimary, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(androidx.compose.ui.Modifier.height(10.dp))
+
+            // Back to registration
+            TextButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, null,
+                    tint = OnSurfaceDark.copy(0.5f),
+                    modifier = androidx.compose.ui.Modifier.size(16.dp))
+                Spacer(androidx.compose.ui.Modifier.width(6.dp))
+                Text("Back to Registration", color = OnSurfaceDark.copy(0.5f),
+                    style = MaterialTheme.typography.labelMedium)
+            }
+
+            Spacer(androidx.compose.ui.Modifier.height(32.dp))
         }
     }
 }

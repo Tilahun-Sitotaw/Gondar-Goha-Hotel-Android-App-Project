@@ -188,14 +188,16 @@ fun UserCard(
     val name = (user["displayName"] as? String)?.takeIf { it.isNotBlank() }
         ?: (user["email"] as? String)?.substringBefore("@")?.replaceFirstChar { it.uppercase() }
         ?: "Guest"
-    val email       = user["email"] as? String ?: ""
-    val role        = user["role"] as? String ?: "GUEST"
-    val phone       = user["phoneNumber"] as? String ?: ""
-    val address     = user["address"] as? String ?: ""
-    val uid         = user["uid"] as? String ?: ""
-    val profileImg  = user["profileImage"] as? String ?: ""
-    val isAnonymous = email.isBlank()
-    val isAdmin     = role == "ADMIN"
+    val email           = user["email"] as? String ?: ""
+    val role            = user["role"] as? String ?: "GUEST"
+    val phone           = user["phoneNumber"] as? String ?: ""
+    val address         = user["address"] as? String ?: ""
+    val uid             = user["uid"] as? String ?: ""
+    val profileImg      = user["profilePhotoUrl"] as? String ?: ""
+    val idDocumentUrl   = user["idDocumentUrl"] as? String ?: ""
+    val idDocumentType  = user["idDocumentType"] as? String ?: ""
+    val isAnonymous     = email.isBlank()
+    val isAdmin         = role == "ADMIN"
 
     var roleMenuExpanded    by remember { mutableStateOf(false) }
     var showDeleteConfirm   by remember { mutableStateOf(false) }
@@ -410,7 +412,47 @@ fun UserCard(
                     if (address.isNotBlank()) {
                         DetailRow(Icons.Default.LocationOn, "Address", address)
                     }
-                    if (phone.isBlank() && address.isBlank() && uid.isBlank()) {
+                    // ID Document
+                    if (idDocumentUrl.isNotBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = GoldPrimary.copy(0.08f),
+                            border = BorderStroke(1.dp, GoldPrimary.copy(0.25f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Badge, null,
+                                        tint = GoldPrimary, modifier = Modifier.size(14.dp))
+                                    Text("Identity Document",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = GoldPrimary.copy(0.8f),
+                                        fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(Modifier.height(6.dp))
+                                Text(idDocumentType.ifBlank { "ID Document" },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OnSurfaceDark.copy(0.6f))
+                                Spacer(Modifier.height(8.dp))
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(idDocumentUrl).crossfade(true).build(),
+                                    contentDescription = "ID Document",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(1.dp, Color.White.copy(0.1f), RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                        }
+                    }
+                    if (phone.isBlank() && address.isBlank() && uid.isBlank() && idDocumentUrl.isBlank()) {
                         Text("No additional information available",
                             style = MaterialTheme.typography.bodySmall,
                             color = OnSurfaceDark.copy(0.3f))
