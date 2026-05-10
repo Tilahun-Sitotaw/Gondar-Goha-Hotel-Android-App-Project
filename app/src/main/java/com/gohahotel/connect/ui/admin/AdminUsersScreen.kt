@@ -31,6 +31,7 @@ import com.gohahotel.connect.ui.theme.*
 @Composable
 fun AdminUsersScreen(
     onBack: () -> Unit,
+    onGuestClick: (String) -> Unit = {},
     viewModel: AdminViewModel = hiltViewModel()
 ) {
     val users by viewModel.users.collectAsState()
@@ -161,6 +162,10 @@ fun AdminUsersScreen(
                         items(filteredUsers, key = { it["uid"] as? String ?: it.hashCode().toString() }) { user ->
                             UserCard(
                                 user = user,
+                                onClick = {
+                                    val uid = user["uid"] as? String
+                                    if (uid != null) onGuestClick(uid)
+                                },
                                 onRoleChange = { newRole ->
                                     val uid = user["uid"] as? String ?: return@UserCard
                                     viewModel.updateUserRole(uid, newRole)
@@ -182,6 +187,7 @@ fun AdminUsersScreen(
 @Composable
 fun UserCard(
     user: Map<String, Any>,
+    onClick: () -> Unit = {},
     onRoleChange: (String) -> Unit,
     onDelete: () -> Unit
 ) {
@@ -240,6 +246,7 @@ fun UserCard(
     }
 
     Surface(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = Color(0xFF0C1A28),
