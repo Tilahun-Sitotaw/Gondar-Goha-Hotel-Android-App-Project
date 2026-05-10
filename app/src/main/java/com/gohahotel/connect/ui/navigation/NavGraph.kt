@@ -31,6 +31,7 @@ import com.gohahotel.connect.ui.admin.AdminPromotionsScreen
 import com.gohahotel.connect.ui.admin.AdminMenuManagement
 import com.gohahotel.connect.ui.admin.AdminOrdersScreen
 import com.gohahotel.connect.ui.admin.AdminUsersScreen
+import com.gohahotel.connect.ui.admin.AdminGuestDetailScreen
 import com.gohahotel.connect.ui.admin.AdminContentManagement
 import com.gohahotel.connect.ui.chat.AdminChatScreen
 import com.gohahotel.connect.ui.chat.GuestChatScreen
@@ -273,7 +274,23 @@ fun GohaNavGraph() {
         }
 
         composable(Screen.AdminUsers.route) {
-            AdminUsersScreen(onBack = { navController.popBackStack() })
+            AdminUsersScreen(
+                onBack = { navController.popBackStack() },
+                onGuestClick = { userId ->
+                    navController.navigate(Screen.AdminGuestDetail.createRoute(userId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.AdminGuestDetail.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            AdminGuestDetailScreen(
+                userId = userId,
+                onBack = { navController.popBackStack() }
+            )
         }
         
         composable(Screen.AdminContent.route) {
