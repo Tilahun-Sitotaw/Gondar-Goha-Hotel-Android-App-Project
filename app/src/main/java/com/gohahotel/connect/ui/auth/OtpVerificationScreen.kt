@@ -86,7 +86,7 @@ fun OtpVerificationScreen(
 
             // ── Email display ─────────────────────────────────────────────────
             Text(
-                "We've sent a 6-digit code to:",
+                "Registration for:",
                 style = MaterialTheme.typography.bodyMedium,
                 color = OnSurfaceDark.copy(0.6f),
                 textAlign = TextAlign.Center
@@ -108,7 +108,63 @@ fun OtpVerificationScreen(
                 )
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(20.dp))
+
+            // ── Show OTP Code Prominently ─────────────────────────────────────
+            if (uiState.message != null && uiState.message!!.contains("verification code")) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = SuccessGreen.copy(0.12f),
+                    border = BorderStroke(2.dp, SuccessGreen.copy(0.4f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                null,
+                                tint = SuccessGreen,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Text(
+                                "Your Verification Code",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = SuccessGreen,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        // Extract OTP from message
+                        val otpMatch = Regex("\\d{6}").find(uiState.message ?: "")
+                        val displayOtp = otpMatch?.value ?: "------"
+                        
+                        Text(
+                            displayOtp,
+                            style = MaterialTheme.typography.displayMedium,
+                            color = SuccessGreen,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 12.sp
+                        )
+                        
+                        Text(
+                            "Enter this code below to complete registration",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceDark.copy(0.7f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+
+            Spacer(Modifier.height(8.dp))
 
             // ── OTP Input Field ───────────────────────────────────────────────
             Surface(
@@ -173,7 +229,7 @@ fun OtpVerificationScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Error banner ──────────────────────────────────────────────────
+            // ── Error banner only ─────────────────────────────────────────────
             AnimatedVisibility(
                 visible = uiState.error != null,
                 enter = fadeIn() + expandVertically(),
@@ -206,40 +262,7 @@ fun OtpVerificationScreen(
                 }
             }
 
-            // ── Success banner ────────────────────────────────────────────────
-            AnimatedVisibility(
-                visible = uiState.message != null,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = SuccessGreen.copy(0.1f),
-                    border = BorderStroke(1.dp, SuccessGreen.copy(0.3f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Icon(
-                            Icons.Default.CheckCircle,
-                            null,
-                            tint = SuccessGreen,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            uiState.message ?: "",
-                            color = SuccessGreen,
-                            style = MaterialTheme.typography.bodySmall,
-                            lineHeight = 18.sp
-                        )
-                    }
-                }
-            }
-
-            if (uiState.error != null || uiState.message != null) {
+            if (uiState.error != null) {
                 Spacer(Modifier.height(16.dp))
             }
 

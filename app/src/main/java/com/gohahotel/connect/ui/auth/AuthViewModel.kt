@@ -80,6 +80,7 @@ class AuthViewModel @Inject constructor(
             address.isBlank()           -> { _uiState.update { it.copy(error = "Physical address is required") }; return }
             password.length < 6         -> { _uiState.update { it.copy(error = "Password must be at least 6 characters") }; return }
             password != confirmPassword -> { _uiState.update { it.copy(error = "Passwords do not match") }; return }
+            idDocumentUri == null       -> { _uiState.update { it.copy(error = "Identity document is required. Please upload your ID.") }; return }
         }
 
         viewModelScope.launch {
@@ -88,24 +89,18 @@ class AuthViewModel @Inject constructor(
             // Generate 6-digit OTP
             val otp = (100000..999999).random().toString()
 
-            // Upload ID document to Cloudinary if provided
+            // Upload ID document to Cloudinary (required)
             var idDocUrl = ""
-            if (idDocumentUri != null) {
-                try {
-                    idDocUrl = cloudinaryService.uploadFile(idDocumentUri, "identity_documents")
-                } catch (_: Exception) {
-                    // Non-fatal — continue registration without ID doc URL
-                }
-            }
-
-            // Try to send OTP email
-            val emailResult = try {
-                emailService.sendOtpEmail(email, otp, displayName).getOrThrow()
-                true
+            try {
+                idDocUrl = cloudinaryService.uploadFile(idDocumentUri, "identity_documents")
             } catch (e: Exception) {
-                // Email failed, but we'll proceed anyway and show OTP in UI
-                android.util.Log.e("AuthViewModel", "Email send failed: ${e.message}", e)
-                false
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to upload ID document. Please check your internet connection and try again."
+                    )
+                }
+                return@launch
             }
 
             // Store registration data temporarily for verification
@@ -115,11 +110,7 @@ class AuthViewModel @Inject constructor(
                     isOtpSent    = true,
                     generatedOtp = otp,
                     userEmail    = email,
-                    message      = if (emailResult) {
-                        "A 6-digit verification code has been sent to $email. Please check your inbox."
-                    } else {
-                        "⚠️ Email service unavailable. Your verification code is: $otp\n\nPlease enter this code to continue."
-                    }
+                    message      = "Your verification code is: $otp\n\nPlease enter this code below to complete registration."
                 )
             }
             
@@ -194,7 +185,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ─── Resend OTP email ─────────────────────────────────────────────────────
+    // ─── Resend OTP ───────────────────────────────────────────────────────────
     fun resendOtp() {
         val email = _uiState.value.userEmail
         val displayName = tempRegistrationData["displayName"] ?: "Guest"
@@ -210,19 +201,13 @@ class AuthViewModel @Inject constructor(
             // Generate new OTP
             val otp = (100000..999999).random().toString()
             
-            emailService.sendOtpEmail(email, otp, displayName)
-                .onSuccess {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            generatedOtp = otp,
-                            message = "New verification code sent to $email"
-                        )
-                    }
-                }
-                .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = "Failed to resend code: ${e.message}") }
-                }
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    generatedOtp = otp,
+                    message = "New verification code: $otp\n\nPlease enter this code below."
+                )
+            }
         }
     }
 
