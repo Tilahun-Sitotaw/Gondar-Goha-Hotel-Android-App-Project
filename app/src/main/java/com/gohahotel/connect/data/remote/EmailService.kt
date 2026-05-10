@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
 class EmailService @Inject constructor() {
 
     private val adminEmail = "gohahotel34@gmail.com"
-    private val appPassword = "uqowibvcigupdnuh" // User provided app password
+    private val appPassword = "sfelrhlelqicdxdp" // Updated app password
 
     suspend fun sendOtpEmail(recipientEmail: String, otp: String, displayName: String = "Guest"): Result<Unit> = withContext(Dispatchers.IO) {
         try {
