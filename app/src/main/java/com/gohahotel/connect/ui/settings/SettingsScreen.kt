@@ -233,7 +233,8 @@ fun SettingsScreen(
                 }
 
                 // -- Admin / Staff card ----------------------------------------
-                if (uiState.userRole == "ADMIN" || uiState.userRole == "STAFF") {
+                if (uiState.userRole == "ADMIN" ||
+                    uiState.userRole in listOf("STAFF", "KITCHEN", "RECEPTION", "HOUSEKEEPING")) {
                     AdminStaffCard(
                         role = uiState.userRole,
                         onNavigateToAdmin = onNavigateToAdmin,
@@ -628,9 +629,27 @@ private fun AdminStaffCard(
 ) {
     val isAdmin = role == "ADMIN"
     val accentColor = if (isAdmin) GoldPrimary else TealPrimary
-    val icon = if (isAdmin) Icons.Default.AdminPanelSettings else Icons.Default.ManageAccounts
-    val label = if (isAdmin) "Admin Control Center" else "Staff Portal"
-    val subtitle = if (isAdmin) "Manage rooms, orders, users & content" else "View orders and manage guest requests"
+    val icon = when (role) {
+        "ADMIN"        -> Icons.Default.AdminPanelSettings
+        "KITCHEN"      -> Icons.Default.Restaurant
+        "RECEPTION"    -> Icons.Default.Desk
+        "HOUSEKEEPING" -> Icons.Default.CleaningServices
+        else           -> Icons.Default.ManageAccounts
+    }
+    val label = when (role) {
+        "ADMIN"        -> "Admin Control Center"
+        "KITCHEN"      -> "Kitchen Dashboard"
+        "RECEPTION"    -> "Front Desk Portal"
+        "HOUSEKEEPING" -> "Housekeeping Portal"
+        else           -> "Staff Portal"
+    }
+    val subtitle = when (role) {
+        "ADMIN"        -> "Manage rooms, orders, users & content"
+        "KITCHEN"      -> "View and manage food orders in real time"
+        "RECEPTION"    -> "Manage check-ins, bookings & guest requests"
+        "HOUSEKEEPING" -> "View room assignments and cleaning tasks"
+        else           -> "View orders and manage guest requests"
+    }
 
     Surface(
         onClick = if (isAdmin) onNavigateToAdmin else onNavigateToStaff,
@@ -679,7 +698,7 @@ private fun AdminStaffCard(
 }
 
 // -----------------------------------------------------------------------------
-// SettingsSectionCard — generic wrapper
+// SettingsSectionCard ï¿½ generic wrapper
 // -----------------------------------------------------------------------------
 
 @Composable
@@ -784,7 +803,7 @@ private fun LanguageSection(
     val languages = listOf(
         LangOption("en", "English",  "\uD83C\uDDEC\uD83C\uDDE7"),
         LangOption("am", "????",    "\uD83C\uDDEA\uD83C\uDDF9"),
-        LangOption("fr", "Français", "\uD83C\uDDEB\uD83C\uDDF7")
+        LangOption("fr", "Franï¿½ais", "\uD83C\uDDEB\uD83C\uDDF7")
     )
 
     Column {
@@ -848,11 +867,11 @@ private fun AboutSection(appVersion: String) {
         )
 
         InfoRow(emoji = "\uD83C\uDFE8", label = "Hotel",      value = "Goha Hotel, Gondar, Ethiopia")
-        InfoRow(emoji = "\uD83D\uDCDE", label = "Front Desk", value = "+251 58 111 0000 · Ext. 100")
+        InfoRow(emoji = "\uD83D\uDCDE", label = "Front Desk", value = "+251 58 111 0000 ï¿½ Ext. 100")
         InfoRow(emoji = "\uD83D\uDCE7", label = "Email",      value = "gohahotel34@gmail.com")
         InfoRow(emoji = "\uD83D\uDCCD", label = "Location",   value = "Gondar, Amhara Region, Ethiopia")
         InfoRow(emoji = "\u2139\uFE0F",  label = "App Version", value = appVersion)
-        InfoRow(emoji = "\uD83D\uDCBB", label = "Technology", value = "Kotlin · Jetpack Compose · Firebase")
+        InfoRow(emoji = "\uD83D\uDCBB", label = "Technology", value = "Kotlin ï¿½ Jetpack Compose ï¿½ Firebase")
     }
 }
 
@@ -910,7 +929,7 @@ private fun PrivacyLegalSection() {
     val uriHandler = LocalUriHandler.current
 
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        // Privacy Policy — clickable
+        // Privacy Policy ï¿½ clickable
         Surface(
             onClick = {
                 try { uriHandler.openUri("https://gohahotel.com/privacy") } catch (_: Exception) {}
@@ -946,7 +965,7 @@ private fun PrivacyLegalSection() {
             color = Color.White.copy(alpha = 0.05f)
         )
 
-        // Terms of Service — clickable
+        // Terms of Service ï¿½ clickable
         Surface(
             onClick = {
                 try { uriHandler.openUri("https://gohahotel.com/terms") } catch (_: Exception) {}
@@ -982,7 +1001,7 @@ private fun PrivacyLegalSection() {
             color = Color.White.copy(alpha = 0.05f)
         )
 
-        // Data & Storage — info only
+        // Data & Storage ï¿½ info only
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1110,7 +1129,7 @@ private fun SettingsFooter() {
         }
 
         Text(
-            text = "© $year Goha Hotel, Gondar, Ethiopia",
+            text = "ï¿½ $year Goha Hotel, Gondar, Ethiopia",
             style = MaterialTheme.typography.labelSmall,
             color = OnSurfaceDark.copy(alpha = 0.35f),
             textAlign = TextAlign.Center
@@ -1125,7 +1144,7 @@ private fun SettingsFooter() {
         )
 
         Text(
-            text = "All rights reserved · Powered by Kotlin & Firebase",
+            text = "All rights reserved ï¿½ Powered by Kotlin & Firebase",
             style = MaterialTheme.typography.labelSmall,
             color = OnSurfaceDark.copy(alpha = 0.2f),
             textAlign = TextAlign.Center
