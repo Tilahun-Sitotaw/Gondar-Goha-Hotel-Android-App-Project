@@ -98,38 +98,41 @@ class AuthViewModel @Inject constructor(
                 }
             }
 
-            // Send OTP email
-            emailService.sendOtpEmail(email, otp, displayName)
-                .onSuccess {
-                    // Store registration data temporarily for verification
-                    _uiState.update {
-                        it.copy(
-                            isLoading    = false,
-                            isOtpSent    = true,
-                            generatedOtp = otp,
-                            userEmail    = email,
-                            message      = "A 6-digit verification code has been sent to $email. Please check your inbox."
-                        )
+            // Try to send OTP email
+            val emailResult = try {
+                emailService.sendOtpEmail(email, otp, displayName).getOrThrow()
+                true
+            } catch (e: Exception) {
+                // Email failed, but we'll proceed anyway and show OTP in UI
+                android.util.Log.e("AuthViewModel", "Email send failed: ${e.message}", e)
+                false
+            }
+
+            // Store registration data temporarily for verification
+            _uiState.update {
+                it.copy(
+                    isLoading    = false,
+                    isOtpSent    = true,
+                    generatedOtp = otp,
+                    userEmail    = email,
+                    message      = if (emailResult) {
+                        "A 6-digit verification code has been sent to $email. Please check your inbox."
+                    } else {
+                        "⚠️ Email service unavailable. Your verification code is: $otp\n\nPlease enter this code to continue."
                     }
-                    // Store other registration data in a temporary map for later use
-                    tempRegistrationData = mapOf(
-                        "email" to email,
-                        "password" to password,
-                        "displayName" to displayName,
-                        "phoneNumber" to phoneNumber,
-                        "address" to address,
-                        "idDocumentUrl" to idDocUrl,
-                        "idDocumentType" to idDocumentType
-                    )
-                }
-                .onFailure { e ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = "Failed to send verification email: ${e.message}"
-                        )
-                    }
-                }
+                )
+            }
+            
+            // Store other registration data in a temporary map for later use
+            tempRegistrationData = mapOf(
+                "email" to email,
+                "password" to password,
+                "displayName" to displayName,
+                "phoneNumber" to phoneNumber,
+                "address" to address,
+                "idDocumentUrl" to idDocUrl,
+                "idDocumentType" to idDocumentType
+            )
         }
     }
 
