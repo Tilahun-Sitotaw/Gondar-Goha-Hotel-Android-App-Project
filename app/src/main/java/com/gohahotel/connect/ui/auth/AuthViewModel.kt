@@ -14,19 +14,22 @@ import javax.inject.Inject
 import com.gohahotel.connect.data.remote.FirestoreService
 
 data class AuthUiState(
-    val isLoading        : Boolean = false,
-    val isSuccess        : Boolean = false,
-    val isVerificationSent: Boolean = false,   // account created, email sent
-    val error            : String? = null,
-    val message          : String? = null,
-    val userRole         : String  = "GUEST"
+    val isLoading           : Boolean = false,
+    val isSuccess           : Boolean = false,
+    val isOtpSent           : Boolean = false,   // OTP sent to email
+    val error               : String? = null,
+    val message             : String? = null,
+    val userRole            : String  = "GUEST",
+    val generatedOtp        : String  = "",      // Store OTP for verification
+    val userEmail           : String  = ""       // Store email for OTP verification
 )
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository   : AuthRepository,
     private val firestoreService : FirestoreService,
-    private val cloudinaryService: CloudinaryService
+    private val cloudinaryService: CloudinaryService,
+    private val emailService     : com.gohahotel.connect.data.remote.EmailService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -58,7 +61,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ─── Register — 2-step: create account + send verification email ──────────
+    // ─── Register — Step 1: Generate OTP and send to email ───────────────────
     fun register(
         email          : String,
         password       : String,
@@ -82,6 +85,9 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
+            // Generate 6-digit OTP
+            val otp = (100000..999999).random().toString()
+
             // Upload ID document to Cloudinary if provided
             var idDocUrl = ""
             if (idDocumentUri != null) {
@@ -92,23 +98,81 @@ class AuthViewModel @Inject constructor(
                 }
             }
 
-            authRepository.registerWithEmail(
-                email          = email,
-                password       = password,
-                displayName    = displayName,
-                phoneNumber    = phoneNumber,
-                address        = address,
-                idDocumentUrl  = idDocUrl,
-                idDocumentType = idDocumentType
-            )
-                .onSuccess { _ ->
+            // Send OTP email
+            emailService.sendOtpEmail(email, otp, displayName)
+                .onSuccess {
+                    // Store registration data temporarily for verification
                     _uiState.update {
                         it.copy(
-                            isLoading          = false,
-                            isVerificationSent = true,
-                            message            = "Account created! A verification link has been sent to $email. Please check your inbox and verify before continuing."
+                            isLoading    = false,
+                            isOtpSent    = true,
+                            generatedOtp = otp,
+                            userEmail    = email,
+                            message      = "A 6-digit verification code has been sent to $email. Please check your inbox."
                         )
                     }
+                    // Store other registration data in a temporary map for later use
+                    tempRegistrationData = mapOf(
+                        "email" to email,
+                        "password" to password,
+                        "displayName" to displayName,
+                        "phoneNumber" to phoneNumber,
+                        "address" to address,
+                        "idDocumentUrl" to idDocUrl,
+                        "idDocumentType" to idDocumentType
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Failed to send verification email: ${e.message}"
+                        )
+                    }
+                }
+        }
+    }
+
+    // Temporary storage for registration data
+    private var tempRegistrationData: Map<String, String> = emptyMap()
+
+    // ─── Register — Step 2: Verify OTP and create account ────────────────────
+    fun verifyOtpAndRegister(enteredOtp: String) {
+        if (enteredOtp.isBlank()) {
+            _uiState.update { it.copy(error = "Please enter the verification code") }
+            return
+        }
+
+        if (enteredOtp != _uiState.value.generatedOtp) {
+            _uiState.update { it.copy(error = "Invalid verification code. Please try again.") }
+            return
+        }
+
+        // OTP is correct, proceed with account creation
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            val data = tempRegistrationData
+            authRepository.registerWithEmail(
+                email          = data["email"] ?: "",
+                password       = data["password"] ?: "",
+                displayName    = data["displayName"] ?: "",
+                phoneNumber    = data["phoneNumber"] ?: "",
+                address        = data["address"] ?: "",
+                idDocumentUrl  = data["idDocumentUrl"] ?: "",
+                idDocumentType = data["idDocumentType"] ?: ""
+            )
+                .onSuccess { user ->
+                    val role = firestoreService.getUserRole(user.uid)
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isSuccess = true,
+                            userRole  = role,
+                            message   = "Account created successfully! Welcome to Goha Hotel."
+                        )
+                    }
+                    tempRegistrationData = emptyMap() // Clear temp data
                 }
                 .onFailure { e ->
                     val msg = when {
@@ -127,40 +191,35 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ─── Resend verification email ────────────────────────────────────────────
-    fun resendVerificationEmail() {
+    // ─── Resend OTP email ─────────────────────────────────────────────────────
+    fun resendOtp() {
+        val email = _uiState.value.userEmail
+        val displayName = tempRegistrationData["displayName"] ?: "Guest"
+        
+        if (email.isBlank()) {
+            _uiState.update { it.copy(error = "Email not found. Please start registration again.") }
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            authRepository.resendVerificationEmail()
+            
+            // Generate new OTP
+            val otp = (100000..999999).random().toString()
+            
+            emailService.sendOtpEmail(email, otp, displayName)
                 .onSuccess {
                     _uiState.update {
-                        it.copy(isLoading = false,
-                            message = "Verification email resent. Check your inbox.")
+                        it.copy(
+                            isLoading = false,
+                            generatedOtp = otp,
+                            message = "New verification code sent to $email"
+                        )
                     }
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to resend code: ${e.message}") }
                 }
-        }
-    }
-
-    // ─── Check if email is verified then proceed ──────────────────────────────
-    fun checkVerificationAndProceed() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            val verified = authRepository.checkEmailVerified()
-            if (verified) {
-                val user = authRepository.currentUser
-                val role = if (user != null) firestoreService.getUserRole(user.uid) else "GUEST"
-                _uiState.update {
-                    it.copy(isLoading = false, isSuccess = true, userRole = role)
-                }
-            } else {
-                _uiState.update {
-                    it.copy(isLoading = false,
-                        error = "Email not verified yet. Please check your inbox and click the verification link, then tap 'I've Verified' again.")
-                }
-            }
         }
     }
 

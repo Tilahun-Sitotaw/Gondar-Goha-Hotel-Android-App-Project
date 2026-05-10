@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,19 +18,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gohahotel.connect.ui.theme.*
 
 @Composable
-fun EmailVerificationScreen(
+fun OtpVerificationScreen(
     email: String,
     uiState: AuthUiState,
     onResend: () -> Unit,
-    onVerified: () -> Unit,
+    onVerifyOtp: (String) -> Unit,
     onBack: () -> Unit
 ) {
+    var otpCode by remember { mutableStateOf("") }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -71,7 +75,7 @@ fun EmailVerificationScreen(
 
             // ── Title ─────────────────────────────────────────────────────────
             Text(
-                "Verify Your Email",
+                "Enter Verification Code",
                 style = MaterialTheme.typography.headlineMedium,
                 color = GoldPrimary,
                 fontWeight = FontWeight.ExtraBold,
@@ -81,6 +85,15 @@ fun EmailVerificationScreen(
             Spacer(Modifier.height(12.dp))
 
             // ── Email display ─────────────────────────────────────────────────
+            Text(
+                "We've sent a 6-digit code to:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = OnSurfaceDark.copy(0.6f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(8.dp))
+
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = GoldPrimary.copy(0.08f),
@@ -97,7 +110,7 @@ fun EmailVerificationScreen(
 
             Spacer(Modifier.height(28.dp))
 
-            // ── Instructions card ─────────────────────────────────────────────
+            // ── OTP Input Field ───────────────────────────────────────────────
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -106,41 +119,54 @@ fun EmailVerificationScreen(
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        "We've sent a verification link to your email. Please follow these steps:",
+                        "Check your email inbox and enter the 6-digit code below:",
                         style = MaterialTheme.typography.bodyMedium,
                         color = OnSurfaceDark.copy(0.8f),
+                        textAlign = TextAlign.Center,
                         lineHeight = 20.sp
                     )
 
-                    // Step 1
-                    InstructionStep(
-                        number = "1",
-                        icon = Icons.Default.Email,
-                        text = "Open your email inbox"
+                    OutlinedTextField(
+                        value = otpCode,
+                        onValueChange = { if (it.length <= 6 && it.all { char -> char.isDigit() }) otpCode = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Verification Code") },
+                        placeholder = { Text("000000") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Pin, null, tint = GoldPrimary.copy(0.7f), modifier = Modifier.size(20.dp))
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = OnSurfaceDark,
+                            unfocusedTextColor = OnSurfaceDark.copy(0.9f),
+                            focusedBorderColor = GoldPrimary,
+                            unfocusedBorderColor = Color.White.copy(0.12f),
+                            focusedLabelColor = GoldPrimary,
+                            unfocusedLabelColor = OnSurfaceDark.copy(0.4f),
+                            focusedLeadingIconColor = GoldPrimary,
+                            unfocusedLeadingIconColor = GoldPrimary.copy(0.4f),
+                            cursorColor = GoldPrimary,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        ),
+                        textStyle = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 8.sp,
+                            textAlign = TextAlign.Center
+                        )
                     )
 
-                    // Step 2
-                    InstructionStep(
-                        number = "2",
-                        icon = Icons.Default.Search,
-                        text = "Find the email from Goha Hotel (check spam if needed)"
-                    )
-
-                    // Step 3
-                    InstructionStep(
-                        number = "3",
-                        icon = Icons.Default.Link,
-                        text = "Click the verification link in the email"
-                    )
-
-                    // Step 4
-                    InstructionStep(
-                        number = "4",
-                        icon = Icons.Default.ArrowBack,
-                        text = "Come back here and tap \"I've Verified My Email\""
+                    Text(
+                        "💡 Tip: The code is valid for 10 minutes",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = OnSurfaceDark.copy(0.4f),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -217,13 +243,13 @@ fun EmailVerificationScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            // ── "I've Verified" button ────────────────────────────────────────
+            // ── "Verify Code" button ──────────────────────────────────────────
             Button(
-                onClick = onVerified,
+                onClick = { onVerifyOtp(otpCode) },
                 modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
-                enabled = !uiState.isLoading
+                enabled = !uiState.isLoading && otpCode.length == 6
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
@@ -239,7 +265,7 @@ fun EmailVerificationScreen(
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        "I've Verified My Email",
+                        "Verify & Create Account",
                         color = Color(0xFF050D18),
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 15.sp
@@ -266,7 +292,7 @@ fun EmailVerificationScreen(
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Resend Verification Email",
+                    "Resend Code",
                     color = GoldPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
@@ -296,50 +322,5 @@ fun EmailVerificationScreen(
 
             Spacer(Modifier.height(40.dp))
         }
-    }
-}
-
-@Composable
-private fun InstructionStep(
-    number: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    text: String
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        // Step number badge
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(GoldPrimary.copy(0.15f), RoundedCornerShape(8.dp))
-                .border(1.dp, GoldPrimary.copy(0.3f), RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                number,
-                color = GoldPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
-        }
-
-        // Icon
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = GoldPrimary.copy(0.7f),
-            modifier = Modifier.size(20.dp).padding(top = 6.dp)
-        )
-
-        // Text
-        Text(
-            text,
-            modifier = Modifier.weight(1f).padding(top = 4.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = OnSurfaceDark.copy(0.9f),
-            lineHeight = 20.sp
-        )
     }
 }
