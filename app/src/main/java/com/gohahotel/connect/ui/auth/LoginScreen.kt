@@ -74,13 +74,13 @@ fun LoginScreen(
         if (uiState.isSuccess) onLoginSuccess(uiState.userRole)
     }
 
-    // ── Email verification step — shown after account creation ────────────────
-    if (uiState.isVerificationSent) {
-        EmailVerificationScreen(
+    // ── Email OTP verification step — shown after registration ────────────────
+    if (uiState.isOtpSent) {
+        OtpVerificationScreen(
             email      = email,
             uiState    = uiState,
-            onResend   = { viewModel.resendVerificationEmail() },
-            onVerified = { viewModel.checkVerificationAndProceed() },
+            onResend   = { viewModel.resendOtp() },
+            onVerifyOtp = { otp -> viewModel.verifyOtpAndRegister(otp) },
             onBack     = { viewModel.resetState() }
         )
         return
