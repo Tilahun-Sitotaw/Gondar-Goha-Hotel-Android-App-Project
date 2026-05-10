@@ -241,6 +241,19 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    fun deleteUser(uid: String) {
+        viewModelScope.launch {
+            try {
+                // Remove from Firestore users collection
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    .collection("users").document(uid).delete().await()
+                fetchUsers()
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to remove user: ${e.message}"
+            }
+        }
+    }
+
     fun uploadImage(uri: android.net.Uri, folder: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch {
             _isUploading.value = true
