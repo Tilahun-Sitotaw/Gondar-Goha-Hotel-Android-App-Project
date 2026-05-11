@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.gohahotel.connect.data.remote.FirestoreService
+import kotlinx.coroutines.tasks.await
 
 data class AuthUiState(
     val isLoading           : Boolean = false,
@@ -158,41 +159,88 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
 
             val data = tempRegistrationData
-            authRepository.registerWithEmail(
-                email          = data["email"] ?: "",
-                password       = data["password"] ?: "",
-                displayName    = data["displayName"] ?: "",
-                phoneNumber    = data["phoneNumber"] ?: "",
-                address        = data["address"] ?: "",
-                idDocumentUrl  = data["idDocumentUrl"] ?: "",
-                idDocumentType = data["idDocumentType"] ?: ""
-            )
-                .onSuccess { user ->
-                    val role = firestoreService.getUserRole(user.uid)
+            val email = data["email"] ?: ""
+            val password = data["password"] ?: ""
+
+            // First, try to sign in to see if account exists in Firebase Auth
+            val signInResult = try {
+                authRepository.signInWithEmail(email, password).getOrNull()
+            } catch (e: Exception) {
+                null
+            }
+
+            if (signInResult != null) {
+                // Account exists in Firebase Auth, just update Firestore profile
+                try {
+                    val role = if (email.lowercase().trim() == "gohahotel34@gmail.com") "ADMIN" else "GUEST"
+                    val userProfile = hashMapOf(
+                        "uid"             to signInResult.uid,
+                        "displayName"     to (data["displayName"] ?: ""),
+                        "email"           to email,
+                        "phoneNumber"     to (data["phoneNumber"] ?: ""),
+                        "address"         to (data["address"] ?: ""),
+                        "role"            to role,
+                        "idDocumentUrl"   to (data["idDocumentUrl"] ?: ""),
+                        "idDocumentType"  to (data["idDocumentType"] ?: ""),
+                        "emailVerified"   to true,
+                        "createdAt"       to com.google.firebase.Timestamp.now()
+                    )
+                    
+                    // Update Firestore profile
+                    com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        .collection("users").document(signInResult.uid).set(userProfile).await()
+                    
+                    val userRole = firestoreService.getUserRole(signInResult.uid)
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isSuccess = true,
-                            userRole  = role,
-                            message   = "Account created successfully! Welcome to Goha Hotel."
+                            userRole  = userRole,
+                            message   = "Account restored successfully! Welcome back to Goha Hotel."
                         )
                     }
-                    tempRegistrationData = emptyMap() // Clear temp data
+                    tempRegistrationData = emptyMap()
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to restore account: ${e.message}") }
                 }
-                .onFailure { e ->
-                    val msg = when {
-                        e.message?.contains("email address is already") == true ->
-                            "This email is already registered. Try signing in."
-                        e.message?.contains("badly formatted") == true ->
-                            "Invalid email address format"
-                        e.message?.contains("weak-password") == true ->
-                            "Password is too weak. Use at least 6 characters"
-                        e.message?.contains("network") == true ->
-                            "Network error. Check your connection"
-                        else -> e.message ?: "Registration failed"
+            } else {
+                // Account doesn't exist, create new one
+                authRepository.registerWithEmail(
+                    email          = email,
+                    password       = password,
+                    displayName    = data["displayName"] ?: "",
+                    phoneNumber    = data["phoneNumber"] ?: "",
+                    address        = data["address"] ?: "",
+                    idDocumentUrl  = data["idDocumentUrl"] ?: "",
+                    idDocumentType = data["idDocumentType"] ?: ""
+                )
+                    .onSuccess { user ->
+                        val role = firestoreService.getUserRole(user.uid)
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isSuccess = true,
+                                userRole  = role,
+                                message   = "Account created successfully! Welcome to Goha Hotel."
+                            )
+                        }
+                        tempRegistrationData = emptyMap()
                     }
-                    _uiState.update { it.copy(isLoading = false, error = msg) }
-                }
+                    .onFailure { e ->
+                        val msg = when {
+                            e.message?.contains("email address is already") == true ->
+                                "This email was previously registered. Please use the 'Sign In' option instead."
+                            e.message?.contains("badly formatted") == true ->
+                                "Invalid email address format"
+                            e.message?.contains("weak-password") == true ->
+                                "Password is too weak. Use at least 6 characters"
+                            e.message?.contains("network") == true ->
+                                "Network error. Check your connection"
+                            else -> e.message ?: "Registration failed"
+                        }
+                        _uiState.update { it.copy(isLoading = false, error = msg) }
+                    }
+            }
         }
     }
 

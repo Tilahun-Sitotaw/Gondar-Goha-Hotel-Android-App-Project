@@ -247,6 +247,12 @@ class AdminViewModel @Inject constructor(
                 // Remove from Firestore users collection
                 com.google.firebase.firestore.FirebaseFirestore.getInstance()
                     .collection("users").document(uid).delete().await()
+                
+                // Note: We cannot delete users from Firebase Auth from client-side Android app
+                // This requires Firebase Admin SDK which runs on server-side
+                // For now, we only delete from Firestore
+                // The user can still sign in with their email/password, but won't have profile data
+                
                 fetchUsers()
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to remove user: ${e.message}"
