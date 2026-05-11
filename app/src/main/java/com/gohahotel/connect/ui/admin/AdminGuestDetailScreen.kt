@@ -297,6 +297,7 @@ private fun GuestProfileCard(guestData: Map<String, Any>) {
                     border = BorderStroke(1.dp, GoldPrimary.copy(0.25f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    val context = LocalContext.current
                     Column(modifier = Modifier.padding(12.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -320,7 +321,7 @@ private fun GuestProfileCard(guestData: Map<String, Any>) {
                                     // Open document in browser/viewer
                                     val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
                                     intent.data = android.net.Uri.parse(idDocumentUrl)
-                                    LocalContext.current.startActivity(intent)
+                                    context.startActivity(intent)
                                 },
                                 modifier = Modifier.size(32.dp)
                             ) {
