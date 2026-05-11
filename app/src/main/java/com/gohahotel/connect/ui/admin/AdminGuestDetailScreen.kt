@@ -300,14 +300,33 @@ private fun GuestProfileCard(guestData: Map<String, Any>) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(Icons.Default.Badge, null,
-                                tint = GoldPrimary, modifier = Modifier.size(16.dp))
-                            Text("Identity Document",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = GoldPrimary,
-                                fontWeight = FontWeight.Bold)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.Badge, null,
+                                    tint = GoldPrimary, modifier = Modifier.size(16.dp))
+                                Text("Identity Document",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = GoldPrimary,
+                                    fontWeight = FontWeight.Bold)
+                            }
+                            // Download button
+                            IconButton(
+                                onClick = {
+                                    // Open document in browser/viewer
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                                    intent.data = android.net.Uri.parse(idDocumentUrl)
+                                    LocalContext.current.startActivity(intent)
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(Icons.Default.Download, null,
+                                    tint = GoldPrimary, modifier = Modifier.size(18.dp))
+                            }
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(idDocumentType.ifBlank { "ID Document" },
