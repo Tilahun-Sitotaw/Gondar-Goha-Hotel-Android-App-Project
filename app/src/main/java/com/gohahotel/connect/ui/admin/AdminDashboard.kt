@@ -329,6 +329,7 @@ private fun BookingsTab(
                 FilterChip(
                     selected = selectedFilter == status,
                     onClick = { onFilterChange(status) },
+                    enabled = true,
                     label = { Text(status.displayName) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = GoldPrimary,
@@ -390,6 +391,7 @@ private fun OrdersTab(
                 FilterChip(
                     selected = selectedFilter == status,
                     onClick = { onFilterChange(status) },
+                    enabled = true,
                     label = { Text(status.displayName) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = GoldPrimary,
