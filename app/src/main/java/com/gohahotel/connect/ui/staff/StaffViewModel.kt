@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gohahotel.connect.data.repository.BookingRepository
 import com.gohahotel.connect.domain.model.Booking
+import com.gohahotel.connect.domain.model.BookingStatus
 import com.gohahotel.connect.domain.model.RoomAvailability
+import com.gohahotel.connect.domain.model.RoomStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -72,9 +74,9 @@ class StaffViewModel @Inject constructor(
                     roomId = roomId,
                     roomName = roomBookings.first().roomName,
                     status = when {
-                        activeBooking != null -> com.gohahotel.connect.domain.model.RoomStatus.OCCUPIED
-                        nextBooking != null -> com.gohahotel.connect.domain.model.RoomStatus.RESERVED
-                        else -> com.gohahotel.connect.domain.model.RoomStatus.FREE
+                        activeBooking != null -> RoomStatus.OCCUPIED
+                        nextBooking != null -> RoomStatus.RESERVED
+                        else -> RoomStatus.FREE
                     },
                     currentGuest = activeBooking?.guestName ?: "",
                     checkInDate = activeBooking?.checkInDate ?: "",
@@ -85,7 +87,7 @@ class StaffViewModel @Inject constructor(
             }
     }
 
-    fun updateBookingStatus(bookingId: String, newStatus: com.gohahotel.connect.domain.model.BookingStatus) {
+    fun updateBookingStatus(bookingId: String, newStatus: BookingStatus) {
         viewModelScope.launch {
             try {
                 bookingRepository.updateBookingStatus(bookingId, newStatus)
