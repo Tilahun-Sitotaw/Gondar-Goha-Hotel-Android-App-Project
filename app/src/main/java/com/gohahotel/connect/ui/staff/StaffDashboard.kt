@@ -226,6 +226,27 @@ fun StaffDashboard(
                         }
                     }
 
+                    Spacer(Modifier.height(24.dp))
+
+                    // ── Room Service Orders ──────────────────────────────────────
+                    val roomServiceOrders = uiState.orders.filter { it.type.name == "ROOM_REQUEST" }
+                    if (roomServiceOrders.isNotEmpty()) {
+                        Text(
+                            "ROOM SERVICE REQUESTS",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = GoldPrimary.copy(0.6f),
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        )
+                        Spacer(Modifier.height(12.dp))
+
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            roomServiceOrders.forEach { order ->
+                                RoomServiceOrderCard(order)
+                            }
+                        }
+                    }
+
                     Spacer(Modifier.height(40.dp))
                 }
             }
@@ -452,5 +473,86 @@ private fun RoomDetailRow(label: String, value: String, color: String? = null) {
             fontWeight = FontWeight.Bold,
             color = if (color != null) Color(android.graphics.Color.parseColor(color)) else GoldPrimary
         )
+    }
+}
+
+@Composable
+private fun RoomServiceOrderCard(order: com.gohahotel.connect.domain.model.Order) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = CardDark,
+        border = BorderStroke(1.dp, Color.White.copy(0.05f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Room ${order.roomNumber}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = OnSurfaceDark
+                    )
+                    Text(
+                        order.guestName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = GoldPrimary
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = when (order.status.name) {
+                        "RECEIVED" -> Color(0xFF4CAF50).copy(0.2f)
+                        "PREPARING" -> Color(0xFFFF9800).copy(0.2f)
+                        "READY" -> Color(0xFF2196F3).copy(0.2f)
+                        else -> Color.Gray.copy(0.2f)
+                    }
+                ) {
+                    Text(
+                        order.status.userFriendlyName,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = when (order.status.name) {
+                            "RECEIVED" -> Color(0xFF4CAF50)
+                            "PREPARING" -> Color(0xFFFF9800)
+                            "READY" -> Color(0xFF2196F3)
+                            else -> Color.Gray
+                        },
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Text(
+                order.specialInstructions.ifEmpty { "No special instructions" },
+                style = MaterialTheme.typography.bodySmall,
+                color = OnSurfaceDark.copy(0.7f)
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Delivery: ${order.deliveryLocation}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = OnSurfaceDark.copy(0.6f)
+                )
+                Text(
+                    "ETB ${order.totalAmount.toInt()}",
+                    fontWeight = FontWeight.Bold,
+                    color = GoldPrimary
+                )
+            }
+        }
     }
 }
