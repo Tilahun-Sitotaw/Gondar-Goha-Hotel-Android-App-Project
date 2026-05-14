@@ -14,7 +14,11 @@ data class Order(
     val totalAmount: Double = 0.0,
     val currency: String = "ETB",
     val createdAt: Date = Date(),
-    val estimatedDeliveryMinutes: Int = 30
+    val estimatedDeliveryMinutes: Int = 30,
+    val deliveryLocation: String = "Room",  // Room, Lobby, Pool, Terrace
+    val paymentMethod: String = "",  // Payment method used
+    val paymentStatus: String = "PENDING",  // PENDING, COMPLETED, FAILED
+    val paymentTransactionId: String = ""  // Transaction ID from payment gateway
 )
 
 data class OrderItem(

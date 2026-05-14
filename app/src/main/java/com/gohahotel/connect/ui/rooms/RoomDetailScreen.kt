@@ -330,7 +330,7 @@ fun RoomDetailScreen(
                     }
 
                     Spacer(Modifier.height(12.dp))
-                    // Room Status Badge with user-friendly label
+                    // Room Status Badge with user-friendly label and date range
                     if (room != null) {
                         val statusColor = if (room.isAvailable) Color(0xFF4CAF50) else Color(0xFFFF9800)
                         val statusName = if (room.isAvailable) "Available Now" else "Reserved"
@@ -359,6 +359,13 @@ fun RoomDetailScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = statusColor
                                     )
+                                    if (!room.isAvailable) {
+                                        Text(
+                                            "Reserved for this day",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = statusColor.copy(0.7f)
+                                        )
+                                    }
                                 }
                             }
                         }

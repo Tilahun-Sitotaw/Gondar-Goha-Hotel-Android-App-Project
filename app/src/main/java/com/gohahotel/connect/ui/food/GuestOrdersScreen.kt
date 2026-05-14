@@ -145,7 +145,7 @@ private fun GuestOrderCard(order: Order, onClick: () -> Unit) {
             }
             Spacer(Modifier.height(12.dp))
             
-            Text("${order.items.size} items", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(0.7f))
+            Text("${order.items.size} items · ${order.deliveryLocation}", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(0.7f))
             Text(order.items.joinToString { "${it.quantity}x ${it.menuItemName}" },
                 style = MaterialTheme.typography.labelSmall, color = Color.White.copy(0.5f), maxLines = 1)
                 
