@@ -36,6 +36,7 @@ fun StaffDashboard(
     val bookings by viewModel.allBookings.collectAsState(initial = emptyList())
     val roomStatuses by viewModel.roomStatuses.collectAsState(initial = emptyList())
     val isLoading by viewModel.isLoading.collectAsState(initial = false)
+    val uiState by viewModel.uiState.collectAsState()
     
     var selectedFilter by remember { mutableStateOf(BookingStatus.CONFIRMED) }
     var showRoomDetails by remember { mutableStateOf(false) }
