@@ -183,22 +183,20 @@ private fun EventCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Discount badge (if applicable)
-                if (promotion.discountPercentage > 0) {
-                    Surface(
-                        modifier = Modifier.width(IntrinsicSize.Max),
-                        shape = RoundedCornerShape(6.dp),
-                        color = GoldPrimary
-                    ) {
-                        Text(
-                            "${promotion.discountPercentage}% OFF",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = SurfaceDark,
-                            fontSize = 10.sp
-                        )
-                    }
+                // Event type badge
+                Surface(
+                    modifier = Modifier.width(IntrinsicSize.Max),
+                    shape = RoundedCornerShape(6.dp),
+                    color = GoldPrimary
+                ) {
+                    Text(
+                        promotion.type.name,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = SurfaceDark,
+                        fontSize = 10.sp
+                    )
                 }
             }
         }
