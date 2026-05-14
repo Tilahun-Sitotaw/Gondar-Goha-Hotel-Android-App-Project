@@ -331,12 +331,14 @@ fun RoomDetailScreen(
 
                     Spacer(Modifier.height(12.dp))
                     // Room Status Badge with user-friendly label
-                    val availability = uiState.roomAvailability
-                    if (availability != null) {
+                    if (room != null) {
+                        val statusColor = if (room.isAvailable) Color(0xFF4CAF50) else Color(0xFFFF9800)
+                        val statusName = if (room.isAvailable) "Available Now" else "Reserved"
+                        
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = Color(availability.status.color).copy(0.15f),
-                            border = BorderStroke(1.5.dp, Color(availability.status.color).copy(0.4f))
+                            color = statusColor.copy(0.15f),
+                            border = BorderStroke(1.5.dp, statusColor.copy(0.4f))
                         ) {
                             Row(
                                 modifier = Modifier
@@ -348,22 +350,15 @@ fun RoomDetailScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(10.dp)
-                                        .background(Color(availability.status.color), CircleShape)
+                                        .background(statusColor, CircleShape)
                                 )
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        availability.status.userFriendlyName,
+                                        statusName,
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(availability.status.color)
+                                        color = statusColor
                                     )
-                                    if (availability.daysUntilAvailable > 0 && availability.status != RoomStatus.FREE) {
-                                        Text(
-                                            "Available in ${availability.daysUntilAvailable} day${if (availability.daysUntilAvailable > 1) "s" else ""}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = Color(availability.status.color).copy(0.7f)
-                                        )
-                                    }
                                 }
                             }
                         }
