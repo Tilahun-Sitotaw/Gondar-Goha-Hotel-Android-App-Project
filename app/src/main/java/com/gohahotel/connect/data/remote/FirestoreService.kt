@@ -131,6 +131,13 @@ class FirestoreService @Inject constructor(
             }
     }
 
+    suspend fun getAllBookings(): List<Booking> {
+        return bookingsCol.get().await()
+            .documents.mapNotNull { doc ->
+                doc.toObject(Booking::class.java)?.copy(id = doc.id)
+            }
+    }
+
     suspend fun updateBooking(booking: Booking) {
         bookingsCol.document(booking.id).set(booking).await()
     }

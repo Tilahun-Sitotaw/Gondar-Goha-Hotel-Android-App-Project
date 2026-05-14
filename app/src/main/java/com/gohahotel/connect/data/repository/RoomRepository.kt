@@ -40,6 +40,9 @@ class RoomRepository @Inject constructor(
     suspend fun getBookingsForGuest(guestId: String): List<Booking> =
         firestoreService.getBookingsByGuest(guestId)
 
+    suspend fun getAllBookings(): List<Booking> =
+        firestoreService.getAllBookings()
+
     suspend fun updateBooking(booking: Booking) =
         firestoreService.updateBooking(booking)
 

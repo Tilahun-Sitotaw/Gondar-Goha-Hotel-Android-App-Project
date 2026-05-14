@@ -2,7 +2,7 @@ package com.gohahotel.connect.ui.staff
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gohahotel.connect.data.repository.BookingRepository
+import com.gohahotel.connect.data.repository.RoomRepository
 import com.gohahotel.connect.domain.model.Booking
 import com.gohahotel.connect.domain.model.BookingStatus
 import com.gohahotel.connect.domain.model.RoomAvailability
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StaffViewModel @Inject constructor(
-    private val bookingRepository: BookingRepository
+    private val roomRepository: RoomRepository
 ) : ViewModel() {
 
     private val _allBookings = MutableStateFlow<List<Booking>>(emptyList())
@@ -32,7 +32,7 @@ class StaffViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 // Fetch all bookings from repository
-                val bookings = bookingRepository.getAllBookings()
+                val bookings = roomRepository.getAllBookings()
                 _allBookings.value = bookings
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -47,7 +47,7 @@ class StaffViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 // Calculate room availability based on bookings
-                val bookings = bookingRepository.getAllBookings()
+                val bookings = roomRepository.getAllBookings()
                 val roomStatuses = calculateRoomStatuses(bookings)
                 _roomStatuses.value = roomStatuses
             } catch (e: Exception) {
@@ -90,9 +90,13 @@ class StaffViewModel @Inject constructor(
     fun updateBookingStatus(bookingId: String, newStatus: BookingStatus) {
         viewModelScope.launch {
             try {
-                bookingRepository.updateBookingStatus(bookingId, newStatus)
-                loadAllBookings()
-                loadRoomStatuses()
+                // Get the booking and update its status
+                val booking = _allBookings.value.find { it.id == bookingId }
+                if (booking != null) {
+                    roomRepository.updateBooking(booking.copy(status = newStatus))
+                    loadAllBookings()
+                    loadRoomStatuses()
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
