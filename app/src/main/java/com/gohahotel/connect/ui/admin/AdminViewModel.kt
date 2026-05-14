@@ -72,6 +72,12 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    private val _allBookings = MutableStateFlow<List<com.gohahotel.connect.domain.model.Booking>>(emptyList())
+    val allBookings: StateFlow<List<com.gohahotel.connect.domain.model.Booking>> = _allBookings.asStateFlow()
+
+    private val _allOrders = MutableStateFlow<List<Order>>(emptyList())
+    val allOrders: StateFlow<List<Order>> = _allOrders.asStateFlow()
+
     fun clearError() { _errorMessage.value = null }
 
     init {
@@ -209,8 +215,33 @@ class AdminViewModel @Inject constructor(
         // Start real-time listener — replaces one-shot fetch
         firestoreService.observeAllOrders()
             .catch { /* Firestore error — fall back silently */ }
-            .onEach { _orders.value = it }
+            .onEach { 
+                _orders.value = it
+                _allOrders.value = it
+            }
             .launchIn(viewModelScope)
+    }
+
+    fun loadAllBookings() {
+        viewModelScope.launch {
+            try {
+                val bookings = firestoreService.fetchAllBookings()
+                _allBookings.value = bookings
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun loadAllOrders() {
+        viewModelScope.launch {
+            try {
+                val orders = firestoreService.fetchAllOrders()
+                _allOrders.value = orders
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateOrderStatus(orderId: String, status: OrderStatus) {

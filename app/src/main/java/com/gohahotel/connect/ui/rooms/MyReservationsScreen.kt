@@ -32,6 +32,8 @@ fun MyReservationsScreen(
     onRoomClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showEditDialog by remember { mutableStateOf(false) }
+    var selectedBooking by remember { mutableStateOf<Booking?>(null) }
 
     LaunchedEffect(Unit) { viewModel.loadMyReservations() }
 
@@ -126,7 +128,11 @@ fun MyReservationsScreen(
                         ) { booking ->
                             ReservationCard(
                                 booking = booking,
-                                onClick = { if (booking.roomId.isNotBlank()) onRoomClick(booking.roomId) }
+                                onClick = { if (booking.roomId.isNotBlank()) onRoomClick(booking.roomId) },
+                                onEdit = {
+                                    selectedBooking = booking
+                                    showEditDialog = true
+                                }
                             )
                         }
                         item { Spacer(Modifier.height(16.dp)) }
@@ -135,10 +141,25 @@ fun MyReservationsScreen(
             }
         }
     }
-}
+
+    // Edit booking dialog
+    if (showEditDialog && selectedBooking != null) {
+        EditBookingDialog(
+            booking = selectedBooking!!,
+            onDismiss = { showEditDialog = false },
+            onSave = { updatedBooking ->
+                viewModel.updateBooking(updatedBooking)
+                showEditDialog = false
+            }
+        )
+    }
 
 @Composable
-private fun ReservationCard(booking: Booking, onClick: () -> Unit) {
+private fun ReservationCard(
+    booking: Booking,
+    onClick: () -> Unit,
+    onEdit: () -> Unit = {}
+) {
     val statusColor = when (booking.status) {
         BookingStatus.CONFIRMED   -> SuccessGreen
         BookingStatus.CHECKED_IN  -> InfoBlue
@@ -364,6 +385,185 @@ private fun ReservationCard(booking: Booking, onClick: () -> Unit) {
                     }
                 }
             }
+
+            // Edit button
+            if (booking.status == BookingStatus.PENDING || booking.status == BookingStatus.CONFIRMED) {
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = onEdit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = GoldPrimary.copy(0.15f)
+                    )
+                ) {
+                    Icon(Icons.Default.Edit, null, modifier = Modifier.size(14.dp), tint = GoldPrimary)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Edit Booking", color = GoldPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditBookingDialog(
+    booking: Booking,
+    onDismiss: () -> Unit,
+    onSave: (Booking) -> Unit
+) {
+    var checkInDate by remember { mutableStateOf(booking.checkInDate) }
+    var checkOutDate by remember { mutableStateOf(booking.checkOutDate) }
+    var guests by remember { mutableStateOf(booking.numberOfGuests.toString()) }
+    var showSuccess by remember { mutableStateOf(false) }
+
+    if (showSuccess) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            containerColor = Color(0xFF0A1424),
+            shape = RoundedCornerShape(28.dp),
+            title = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("✅", fontSize = 48.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Booking Updated",
+                        color = SuccessGreen,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 20.sp
+                    )
+                }
+            },
+            text = {
+                Text(
+                    "Your booking has been successfully updated.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = OnSurfaceDark.copy(0.8f),
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
+                ) {
+                    Text("Done", color = SurfaceDark, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            containerColor = Color(0xFF0A1424),
+            shape = RoundedCornerShape(28.dp),
+            title = {
+                Text("Edit Booking", color = GoldPrimary, fontWeight = FontWeight.ExtraBold)
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Check-in date
+                    OutlinedTextField(
+                        value = checkInDate,
+                        onValueChange = { checkInDate = it },
+                        label = { Text("Check-In Date") },
+                        leadingIcon = { Icon(Icons.Default.FlightLand, null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GoldPrimary,
+                            unfocusedBorderColor = Color.White.copy(0.1f),
+                            focusedTextColor = OnSurfaceDark,
+                            unfocusedTextColor = OnSurfaceDark,
+                            focusedLabelColor = GoldPrimary,
+                            cursorColor = GoldPrimary
+                        )
+                    )
+
+                    // Check-out date
+                    OutlinedTextField(
+                        value = checkOutDate,
+                        onValueChange = { checkOutDate = it },
+                        label = { Text("Check-Out Date") },
+                        leadingIcon = { Icon(Icons.Default.FlightTakeoff, null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GoldPrimary,
+                            unfocusedBorderColor = Color.White.copy(0.1f),
+                            focusedTextColor = OnSurfaceDark,
+                            unfocusedTextColor = OnSurfaceDark,
+                            focusedLabelColor = GoldPrimary,
+                            cursorColor = GoldPrimary
+                        )
+                    )
+
+                    // Guests
+                    OutlinedTextField(
+                        value = guests,
+                        onValueChange = { if (it.all(Char::isDigit) && it.length <= 2) guests = it },
+                        label = { Text("Number of Guests") },
+                        leadingIcon = { Icon(Icons.Default.People, null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = GoldPrimary,
+                            unfocusedBorderColor = Color.White.copy(0.1f),
+                            focusedTextColor = OnSurfaceDark,
+                            unfocusedTextColor = OnSurfaceDark,
+                            focusedLabelColor = GoldPrimary,
+                            cursorColor = GoldPrimary
+                        )
+                    )
+
+                    // Validation
+                    val guestCount = guests.toIntOrNull() ?: 0
+                    if (guestCount > booking.maxCapacity) {
+                        Text(
+                            "Cannot exceed maximum guests for this room",
+                            color = Color(0xFFE24A4A),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val guestCount = guests.toIntOrNull() ?: booking.numberOfGuests
+                        if (guestCount <= booking.maxCapacity) {
+                            onSave(
+                                booking.copy(
+                                    checkInDate = checkInDate,
+                                    checkOutDate = checkOutDate,
+                                    numberOfGuests = guestCount,
+                                    updatedAt = System.currentTimeMillis()
+                                )
+                            )
+                            showSuccess = true
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
+                ) {
+                    Text("Save Changes", color = SurfaceDark, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel", color = OnSurfaceDark.copy(0.6f))
+                }
+            }
+        )
     }
 }

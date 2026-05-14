@@ -31,8 +31,10 @@ import com.gohahotel.connect.ui.theme.*
 // ─── Status filter tabs ───────────────────────────────────────────────────────
 private val STATUS_FILTERS = listOf(
     null to "All",
-    OrderStatus.RECEIVED   to "New",
+    OrderStatus.PENDING    to "Pending",
     OrderStatus.PREPARING  to "Preparing",
+    OrderStatus.READY      to "Ready",
+    OrderStatus.RECEIVED   to "New",
     OrderStatus.ON_THE_WAY to "On the Way",
     OrderStatus.DELIVERED  to "Delivered"
 )
@@ -158,8 +160,8 @@ fun AdminOrdersScreen(
                 ) {
                     item {
                         KitchenStatChip(
-                            label = "New",
-                            count = orders.count { it.status == OrderStatus.RECEIVED },
+                            label = "Pending",
+                            count = orders.count { it.status == OrderStatus.PENDING },
                             color = ErrorRed
                         )
                     }
@@ -172,8 +174,8 @@ fun AdminOrdersScreen(
                     }
                     item {
                         KitchenStatChip(
-                            label = "On the Way",
-                            count = orders.count { it.status == OrderStatus.ON_THE_WAY },
+                            label = "Ready",
+                            count = orders.count { it.status == OrderStatus.READY },
                             color = InfoBlue
                         )
                     }
@@ -194,8 +196,10 @@ fun AdminOrdersScreen(
                     items(STATUS_FILTERS) { (status, label) ->
                         val isSelected = selectedFilter == status
                         val chipColor = when (status) {
-                            OrderStatus.RECEIVED   -> ErrorRed
+                            OrderStatus.PENDING    -> ErrorRed
                             OrderStatus.PREPARING  -> WarningAmber
+                            OrderStatus.READY      -> InfoBlue
+                            OrderStatus.RECEIVED   -> ErrorRed
                             OrderStatus.ON_THE_WAY -> InfoBlue
                             OrderStatus.DELIVERED  -> SuccessGreen
                             OrderStatus.CANCELLED  -> Color.Gray
@@ -307,16 +311,20 @@ private fun KitchenStatChip(label: String, count: Int, color: Color) {
 @Composable
 fun KitchenOrderCard(order: Order, onStatusUpdate: (OrderStatus) -> Unit) {
     val statusColor = when (order.status) {
-        OrderStatus.RECEIVED   -> ErrorRed
+        OrderStatus.PENDING    -> ErrorRed
         OrderStatus.PREPARING  -> WarningAmber
+        OrderStatus.READY      -> InfoBlue
+        OrderStatus.RECEIVED   -> ErrorRed
         OrderStatus.ON_THE_WAY -> InfoBlue
         OrderStatus.DELIVERED  -> SuccessGreen
         OrderStatus.CANCELLED  -> Color.Gray
         else                   -> GoldPrimary
     }
     val statusEmoji = when (order.status) {
-        OrderStatus.RECEIVED   -> "🔔"
+        OrderStatus.PENDING    -> "⏳"
         OrderStatus.PREPARING  -> "👨‍🍳"
+        OrderStatus.READY      -> "✅"
+        OrderStatus.RECEIVED   -> "🔔"
         OrderStatus.ON_THE_WAY -> "🛎️"
         OrderStatus.DELIVERED  -> "✅"
         OrderStatus.CANCELLED  -> "❌"
@@ -487,7 +495,7 @@ fun KitchenOrderCard(order: Order, onStatusUpdate: (OrderStatus) -> Unit) {
 
                 // Action button based on current status
                 when (order.status) {
-                    OrderStatus.RECEIVED -> {
+                    OrderStatus.PENDING -> {
                         Button(
                             onClick = { onStatusUpdate(OrderStatus.PREPARING) },
                             shape = RoundedCornerShape(12.dp),
@@ -503,16 +511,44 @@ fun KitchenOrderCard(order: Order, onStatusUpdate: (OrderStatus) -> Unit) {
                     }
                     OrderStatus.PREPARING -> {
                         Button(
-                            onClick = { onStatusUpdate(OrderStatus.ON_THE_WAY) },
+                            onClick = { onStatusUpdate(OrderStatus.READY) },
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = InfoBlue,
                                 contentColor = Color.White
                             )
                         ) {
+                            Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Mark Ready", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    OrderStatus.READY -> {
+                        Button(
+                            onClick = { onStatusUpdate(OrderStatus.DELIVERED) },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SuccessGreen,
+                                contentColor = Color.White
+                            )
+                        ) {
                             Icon(Icons.Default.DeliveryDining, null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Send to Room", fontWeight = FontWeight.Bold)
+                            Text("Deliver", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    OrderStatus.RECEIVED -> {
+                        Button(
+                            onClick = { onStatusUpdate(OrderStatus.PREPARING) },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = WarningAmber,
+                                contentColor = Color.Black
+                            )
+                        ) {
+                            Icon(Icons.Default.Restaurant, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Start Preparing", fontWeight = FontWeight.Bold)
                         }
                     }
                     OrderStatus.ON_THE_WAY -> {
