@@ -145,7 +145,8 @@ class EmailService @Inject constructor() {
         }
     }
 
-    suspend fun sendPasswordResetOtp(recipientEmail: String, otp: String): Result<Unit> = withContext(Dispatchers.IO) {        try {
+    suspend fun sendPasswordResetOtp(recipientEmail: String, otp: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
             val props = Properties().apply {
                 put("mail.smtp.host", "smtp.gmail.com")
                 put("mail.smtp.socketFactory.port", "465")
