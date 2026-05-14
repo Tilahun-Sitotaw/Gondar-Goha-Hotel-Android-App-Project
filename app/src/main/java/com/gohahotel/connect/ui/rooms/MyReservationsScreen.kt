@@ -153,6 +153,7 @@ fun MyReservationsScreen(
             }
         )
     }
+}
 
 @Composable
 private fun ReservationCard(
