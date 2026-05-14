@@ -59,7 +59,10 @@ fun CartScreen(
                     DeliveryType.POOLSIDE -> "Pool Area"
                     DeliveryType.TERRACE  -> "Terrace"
                 },
-                instructions = instructions
+                instructions = instructions,
+                deliveryLocation = deliveryType.label,
+                paymentMethod = paymentUiState.selectedMethod?.displayName ?: "Unknown",
+                paymentTransactionId = paymentUiState.transactionId ?: ""
             )
             paymentViewModel.resetState()
         }

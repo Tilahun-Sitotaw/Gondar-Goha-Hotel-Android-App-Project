@@ -126,7 +126,7 @@ class FoodViewModel @Inject constructor(
 
     fun clearCart() = _uiState.update { it.copy(cartItems = emptyList()) }
 
-    fun placeOrder(roomNumber: String, guestId: String? = null, guestName: String? = null, instructions: String) {
+    fun placeOrder(roomNumber: String, guestId: String? = null, guestName: String? = null, instructions: String, deliveryLocation: String = "Room", paymentMethod: String = "", paymentTransactionId: String = "") {
         val user = authRepository.currentUser
         val finalGuestId = guestId ?: user?.uid ?: "anonymous"
         val finalGuestName = guestName ?: user?.displayName ?: "Guest"
@@ -155,7 +155,11 @@ class FoodViewModel @Inject constructor(
                         totalAmount         = cartTotal,
                         currency            = "ETB",
                         specialInstructions = instructions,
-                        createdAt           = Date()
+                        createdAt           = Date(),
+                        deliveryLocation    = deliveryLocation,
+                        paymentMethod       = paymentMethod,
+                        paymentStatus       = "COMPLETED",
+                        paymentTransactionId = paymentTransactionId
                     )
                 )
                 _uiState.update { it.copy(isLoading = false, activeOrderId = orderId, cartItems = emptyList()) }
