@@ -76,7 +76,7 @@ fun OrderTrackingScreen(
             Text(emoji, fontSize = 72.sp)
 
             Text(
-                order?.status?.displayName ?: "Loading...",
+                order?.status?.userFriendlyName ?: "Loading...",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = when (order?.status) {

@@ -28,12 +28,12 @@ data class OrderItem(
 
 enum class OrderType { FOOD, ROOM_REQUEST }
 
-enum class OrderStatus(val displayName: String, val displayNameAmharic: String, val step: Int) {
-    PENDING("Pending", "በመጠባበቅ ላይ", 0),
-    PREPARING("Preparing", "እየተዘጋጀ ነው", 1),
-    READY("Ready", "ዝግጁ ነው", 2),
-    RECEIVED("Order Received", "ትዕዛዝ ተቀብሏል", 0),
-    ON_THE_WAY("On the Way", "በመምጣት ላይ ነው", 2),
-    DELIVERED("Delivered", "ደርሷል", 3),
-    CANCELLED("Cancelled", "ተሰርዟል", -1)
+enum class OrderStatus(val displayName: String, val displayNameAmharic: String, val userFriendlyName: String, val step: Int) {
+    PENDING("Pending", "በመጠባበቅ ላይ", "Order Placed", 0),
+    PREPARING("Preparing", "እየተዘጋጀ ነው", "Being Prepared", 1),
+    READY("Ready", "ዝግጁ ነው", "Ready for Pickup", 2),
+    RECEIVED("Order Received", "ትዕዛዝ ተቀብሏል", "Order Placed", 0),
+    ON_THE_WAY("On the Way", "በመምጣት ላይ ነው", "On the Way", 2),
+    DELIVERED("Delivered", "ደርሷል", "Delivered", 3),
+    CANCELLED("Cancelled", "ተሰርዟል", "Cancelled", -1)
 }

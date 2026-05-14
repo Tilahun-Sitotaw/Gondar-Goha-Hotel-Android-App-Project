@@ -34,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.gohahotel.connect.domain.model.Promotion
 import com.gohahotel.connect.domain.model.PromotionType
+import com.gohahotel.connect.ui.components.AutoScrollingCarousel
 import com.gohahotel.connect.ui.components.VideoPlayer
 import com.gohahotel.connect.ui.theme.*
 
@@ -267,15 +268,13 @@ fun HomeScreen(
                     }
                 }
             } else {
-                // Horizontal scroll — NOT nested in vertical scroll
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    items(filteredPromos, key = { it.id }) { promo ->
-                        EventCard(promo = promo, onClick = { onNavigateToEvent(promo.id) })
-                    }
-                }
+                // Auto-scrolling carousel for events & highlights
+                AutoScrollingCarousel(
+                    items = filteredPromos,
+                    modifier = Modifier.fillMaxWidth(),
+                    onItemClick = { onNavigateToEvent(it) },
+                    autoScrollDurationMillis = 4000
+                )
             }
             Spacer(Modifier.height(18.dp))
         }
