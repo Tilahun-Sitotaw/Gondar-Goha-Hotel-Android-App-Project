@@ -1,6 +1,7 @@
 package com.gohahotel.connect.ui.rooms
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +54,7 @@ fun RoomDetailScreen(
     var showPaymentSheet   by remember { mutableStateOf(false) }
     var showSuccessDialog  by remember { mutableStateOf(false) }
     var bookingConfirmRef  by remember { mutableStateOf("") }
+    var guestValidationError by remember { mutableStateOf("") }
 
     // Booking state — stored as millis for easy calculation
     var checkInMillis  by remember { mutableLongStateOf(
@@ -209,10 +212,21 @@ fun RoomDetailScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Image gallery
+                // Image gallery with swipe support
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(280.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
                         .background(Brush.verticalGradient(listOf(TealDark, SurfaceVariantDark)))
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures { change, dragAmount ->
+                                change.consume()
+                                when {
+                                    dragAmount > 50 && currentImageIndex > 0 -> currentImageIndex--
+                                    dragAmount < -50 && currentImageIndex < room.imageUrls.size - 1 -> currentImageIndex++
+                                }
+                            }
+                        }
                 ) {
                     if (room.imageUrls.isNotEmpty()) {
                         AsyncImage(
@@ -236,6 +250,34 @@ fun RoomDetailScreen(
                                 color    = Color.White,
                                 style    = MaterialTheme.typography.labelSmall
                             )
+                        }
+                        
+                        // Navigation arrows
+                        if (room.imageUrls.size > 1) {
+                            // Left arrow
+                            if (currentImageIndex > 0) {
+                                IconButton(
+                                    onClick = { currentImageIndex-- },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                        .padding(12.dp)
+                                        .background(Color.Black.copy(0.3f), CircleShape)
+                                ) {
+                                    Icon(Icons.Default.ChevronLeft, null, tint = Color.White)
+                                }
+                            }
+                            // Right arrow
+                            if (currentImageIndex < room.imageUrls.size - 1) {
+                                IconButton(
+                                    onClick = { currentImageIndex++ },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd)
+                                        .padding(12.dp)
+                                        .background(Color.Black.copy(0.3f), CircleShape)
+                                ) {
+                                    Icon(Icons.Default.ChevronRight, null, tint = Color.White)
+                                }
+                            }
                         }
                     } else {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -522,7 +564,8 @@ private fun BookingDialog(
     )
 
     // Validation
-    val isValid = checkOutMillis > checkInMillis && (guests.toIntOrNull() ?: 0) >= 1
+    val guestCount = guests.toIntOrNull() ?: 0
+    val isValid = checkOutMillis > checkInMillis && guestCount >= 1 && guestCount <= room.capacity
 
     // ── Check-In Date Picker ──────────────────────────────────────────────────
     if (showCheckInDatePicker) {
@@ -872,8 +915,14 @@ private fun BookingDialog(
                 )
 
                 // Validation warning
-                if (!isValid && (guests.toIntOrNull() ?: 0) < 1) {
+                val guestCount = guests.toIntOrNull() ?: 0
+                if (guestCount < 1) {
                     Text("Please enter at least 1 guest",
+                        color = Color(0xFFE24A4A),
+                        style = MaterialTheme.typography.labelSmall)
+                }
+                if (guestCount > room.capacity) {
+                    Text("Cannot exceed maximum guests for this room",
                         color = Color(0xFFE24A4A),
                         style = MaterialTheme.typography.labelSmall)
                 }

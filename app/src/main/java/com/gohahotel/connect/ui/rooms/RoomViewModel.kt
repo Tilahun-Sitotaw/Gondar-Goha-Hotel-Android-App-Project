@@ -148,4 +148,17 @@ class RoomViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateBooking(booking: Booking) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                roomRepository.updateBooking(booking)
+                loadMyReservations()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
 }

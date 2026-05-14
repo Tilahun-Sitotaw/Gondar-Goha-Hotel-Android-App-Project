@@ -1,96 +1,98 @@
- package com.gohahotel.connect.ui.staff
+package com.gohahotel.connect.ui.staff
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gohahotel.connect.data.repository.StaffRepository
+import com.gohahotel.connect.data.repository.BookingRepository
 import com.gohahotel.connect.domain.model.Booking
-import com.gohahotel.connect.domain.model.Order
-import com.gohahotel.connect.domain.model.OrderStatus
+import com.gohahotel.connect.domain.model.RoomAvailability
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.gohahotel.connect.data.repository.AuthRepository
-import com.gohahotel.connect.data.remote.FirestoreService
-
-data class StaffUiState(
-    val orders: List<Order> = emptyList(),
-    val bookings: List<Booking> = emptyList(),
-    val isLoading: Boolean = false,
-    val selectedTab: Int = 0,
-    val userRole: String = "STAFF",
-    val error: String? = null
-)
 
 @HiltViewModel
 class StaffViewModel @Inject constructor(
-    private val staffRepository: StaffRepository,
-    private val authRepository: AuthRepository,
-    private val firestoreService: FirestoreService
+    private val bookingRepository: BookingRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(StaffUiState())
-    val uiState = _uiState.asStateFlow()
+    private val _allBookings = MutableStateFlow<List<Booking>>(emptyList())
+    val allBookings: StateFlow<List<Booking>> = _allBookings
 
-    init {
-        fetchUserRole()
-        observeOrders()
-        observeBookings()
-    }
+    private val _roomStatuses = MutableStateFlow<List<RoomAvailability>>(emptyList())
+    val roomStatuses: StateFlow<List<RoomAvailability>> = _roomStatuses
 
-    private fun fetchUserRole() {
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    fun loadAllBookings() {
         viewModelScope.launch {
-            val uid = authRepository.currentUser?.uid
-            if (uid != null) {
-                val role = firestoreService.getUserRole(uid)
-                _uiState.update { it.copy(userRole = role) }
+            _isLoading.value = true
+            try {
+                // Fetch all bookings from repository
+                val bookings = bookingRepository.getAllBookings()
+                _allBookings.value = bookings
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
-    private fun observeOrders() {
+    fun loadRoomStatuses() {
         viewModelScope.launch {
-            staffRepository.observeActiveOrders().collect { orders ->
-                _uiState.update { it.copy(orders = orders) }
+            _isLoading.value = true
+            try {
+                // Calculate room availability based on bookings
+                val bookings = bookingRepository.getAllBookings()
+                val roomStatuses = calculateRoomStatuses(bookings)
+                _roomStatuses.value = roomStatuses
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
-    private fun observeBookings() {
-        viewModelScope.launch {
-            staffRepository.observeTodayBookings().collect { bookings ->
-                _uiState.update { it.copy(bookings = bookings) }
-            }
-        }
-    }
-
-    fun selectTab(index: Int) {
-        _uiState.update { it.copy(selectedTab = index) }
-    }
-
-    fun updateOrderStatus(orderId: String, currentStatus: OrderStatus) {
-        val nextStatus = when (currentStatus) {
-            OrderStatus.RECEIVED -> OrderStatus.PREPARING
-            OrderStatus.PREPARING -> OrderStatus.ON_THE_WAY
-            OrderStatus.ON_THE_WAY -> OrderStatus.DELIVERED
-            else -> OrderStatus.DELIVERED
-        }
+    private fun calculateRoomStatuses(bookings: List<Booking>): List<RoomAvailability> {
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd").format(java.util.Date())
         
-        viewModelScope.launch {
-            try {
-                staffRepository.updateOrderStatus(orderId, nextStatus)
-            } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+        return bookings.groupBy { it.roomId }
+            .map { (roomId, roomBookings) ->
+                val activeBooking = roomBookings.find { booking ->
+                    booking.checkInDate <= today && booking.checkOutDate >= today
+                }
+
+                val nextBooking = roomBookings.filter { it.checkInDate > today }
+                    .minByOrNull { it.checkInDate }
+
+                RoomAvailability(
+                    roomId = roomId,
+                    roomName = roomBookings.first().roomName,
+                    status = when {
+                        activeBooking != null -> com.gohahotel.connect.domain.model.RoomStatus.OCCUPIED
+                        nextBooking != null -> com.gohahotel.connect.domain.model.RoomStatus.RESERVED
+                        else -> com.gohahotel.connect.domain.model.RoomStatus.FREE
+                    },
+                    currentGuest = activeBooking?.guestName ?: "",
+                    checkInDate = activeBooking?.checkInDate ?: "",
+                    checkOutDate = activeBooking?.checkOutDate ?: "",
+                    nextAvailableDate = nextBooking?.checkInDate ?: "",
+                    occupancyPercentage = if (activeBooking != null) 100 else 0
+                )
             }
-        }
     }
 
-    fun updateBookingStatus(bookingId: String, status: String) {
+    fun updateBookingStatus(bookingId: String, newStatus: com.gohahotel.connect.domain.model.BookingStatus) {
         viewModelScope.launch {
             try {
-                staffRepository.updateBookingStatus(bookingId, status)
+                bookingRepository.updateBookingStatus(bookingId, newStatus)
+                loadAllBookings()
+                loadRoomStatuses()
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+                e.printStackTrace()
             }
         }
     }

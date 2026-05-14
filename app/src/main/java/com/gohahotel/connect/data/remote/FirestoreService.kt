@@ -131,6 +131,10 @@ class FirestoreService @Inject constructor(
             }
     }
 
+    suspend fun updateBooking(booking: Booking) {
+        bookingsCol.document(booking.id).set(booking).await()
+    }
+
     // ─── Promotions & Events ──────────────────────────────────────────────────
     suspend fun fetchPromotions(): List<Promotion> {
         return firestore.collection("promotions")
