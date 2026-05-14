@@ -36,6 +36,13 @@ object AvailabilityCalculator {
             else -> RoomStatus.FREE
         }
 
+        // Calculate days until available
+        val daysUntilAvailable = when {
+            activeBooking != null -> calculateNights(today, activeBooking.checkOutDate)
+            nextBooking != null -> calculateNights(today, nextBooking.checkInDate)
+            else -> 0
+        }
+
         return RoomAvailability(
             roomId = roomId,
             roomName = roomName,
@@ -44,7 +51,8 @@ object AvailabilityCalculator {
             checkInDate = activeBooking?.checkInDate ?: "",
             checkOutDate = activeBooking?.checkOutDate ?: "",
             nextAvailableDate = nextBooking?.checkInDate ?: "",
-            occupancyPercentage = if (activeBooking != null) 100 else 0
+            occupancyPercentage = if (activeBooking != null) 100 else 0,
+            daysUntilAvailable = daysUntilAvailable
         )
     }
 

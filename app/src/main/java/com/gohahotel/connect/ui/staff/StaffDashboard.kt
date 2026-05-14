@@ -2,6 +2,8 @@ package com.gohahotel.connect.ui.staff
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -180,6 +183,8 @@ fun StaffDashboard(
                                     labelColor = OnSurfaceDark
                                 ),
                                 border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = selectedFilter == status,
                                     selectedBorderColor = GoldPrimary,
                                     borderColor = GoldPrimary.copy(0.3f)
                                 )
@@ -265,9 +270,9 @@ fun StaffDashboard(
 private fun StaffStatCard(
     label: String,
     value: String,
-    icon: androidx.compose.material.icons.Icons.Filled,
+    icon: ImageVector,
     color: Color,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier,
@@ -301,7 +306,7 @@ private fun RoomStatusCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         color = CardDark,
-        border = BorderStroke(1.dp, status.color.copy(0.3f))
+        border = BorderStroke(1.dp, Color(android.graphics.Color.parseColor(status.color)).copy(0.3f))
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -315,14 +320,14 @@ private fun RoomStatusCard(
                 Text(roomName, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Surface(
                     shape = CircleShape,
-                    color = Color(status.color),
+                    color = Color(android.graphics.Color.parseColor(status.color)),
                     modifier = Modifier.size(8.dp)
-                )
+                ) {}
             }
             Text(
                 status.displayName,
                 style = MaterialTheme.typography.labelSmall,
-                color = Color(status.color),
+                color = Color(android.graphics.Color.parseColor(status.color)),
                 fontWeight = FontWeight.Bold
             )
             if (guestName.isNotEmpty()) {
@@ -373,13 +378,13 @@ private fun BookingCard(booking: Booking) {
                 }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color(booking.status.color).copy(0.2f)
+                    color = Color(android.graphics.Color.parseColor(booking.status.color)).copy(0.2f)
                 ) {
                     Text(
                         booking.status.displayName,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(booking.status.color),
+                        color = Color(android.graphics.Color.parseColor(booking.status.color)),
                         fontWeight = FontWeight.Bold
                     )
                 }

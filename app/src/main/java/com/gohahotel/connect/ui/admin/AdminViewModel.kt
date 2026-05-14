@@ -225,7 +225,7 @@ class AdminViewModel @Inject constructor(
     fun loadAllBookings() {
         viewModelScope.launch {
             try {
-                val bookings = firestoreService.fetchAllBookings()
+                val bookings = firestoreService.getAllBookings()
                 _allBookings.value = bookings
             } catch (e: Exception) {
                 e.printStackTrace()

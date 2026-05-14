@@ -2,23 +2,31 @@ package com.gohahotel.connect.ui.kitchen
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.gohahotel.connect.domain.model.Order
-import com.gohahotel.connect.domain.model.OrderStatus
-import com.gohahotel.connect.domain.model.OrderType
+import com.gohahotel.connect.domain.model.*
+import com.gohahotel.connect.ui.theme.GoldPrimary
+import com.gohahotel.connect.ui.theme.SurfaceDark
+import com.gohahotel.connect.ui.theme.SuccessGreen
+import com.gohahotel.connect.ui.theme.OnSurfaceDark
+import com.gohahotel.connect.ui.theme.CardDark
 import com.gohahotel.connect.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,7 +105,7 @@ fun KitchenDashboard(
                             label = "Preparing",
                             value = foodOrders.count { it.status == OrderStatus.PREPARING }.toString(),
                             icon = Icons.Default.LocalFireDepartment,
-                            color = Color(0xFFFF6B6B),
+                            color = StatusPreparing,
                             modifier = Modifier.weight(1f)
                         )
                         KitchenStatCard(
@@ -126,8 +134,7 @@ fun KitchenDashboard(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(foodOrders.size) { index ->
-                            val order = foodOrders[index]
+                        items(foodOrders) { order ->
                             PerfectOrderCard(
                                 order = order,
                                 onClick = {
@@ -172,19 +179,18 @@ fun KitchenDashboard(
                             }
                         }
                     } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            foodOrders.forEach { order ->
-                                DetailedOrderCard(
-                                    order = order,
-                                    onStatusUpdate = { newStatus ->
-                                        viewModel.updateOrderStatus(order.id, newStatus)
-                                    },
-                                    onClick = {
-                                        selectedOrder = order
-                                        showOrderDetails = true
-                                    }
-                                )
-                            }
+                        foodOrders.forEach { order ->
+                            DetailedOrderCard(
+                                order = order,
+                                onStatusUpdate = { newStatus ->
+                                    viewModel.updateOrderStatus(order.id, newStatus)
+                                },
+                                onClick = {
+                                    selectedOrder = order
+                                    showOrderDetails = true
+                                }
+                            )
+                            Spacer(Modifier.height(12.dp))
                         }
                     }
 
@@ -211,9 +217,9 @@ fun KitchenDashboard(
 private fun KitchenStatCard(
     label: String,
     value: String,
-    icon: androidx.compose.material.icons.Icons.Filled,
+    icon: ImageVector,
     color: Color,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier,
@@ -272,7 +278,8 @@ private fun PerfectOrderCard(
                 Surface(
                     shape = CircleShape,
                     color = getStatusColor(order.status),
-                    modifier = Modifier.size(8.dp)
+                    modifier = Modifier.size(8.dp),
+                    content = {}
                 )
             }
 
@@ -282,7 +289,7 @@ private fun PerfectOrderCard(
                 color = getStatusColor(order.status).copy(0.2f)
             ) {
                 Text(
-                    order.status.displayName,
+                    order.status.userFriendlyName,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = getStatusColor(order.status),
@@ -386,7 +393,7 @@ private fun DetailedOrderCard(
                     color = getStatusColor(order.status).copy(0.2f)
                 ) {
                     Text(
-                        order.status.displayName,
+                        order.status.userFriendlyName,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = getStatusColor(order.status),
@@ -446,7 +453,7 @@ private fun DetailedOrderCard(
                     Button(
                         onClick = { onStatusUpdate(OrderStatus.PREPARING) },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B)),
+                        colors = ButtonDefaults.buttonColors(containerColor = StatusPreparing),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text("Start Prep", fontSize = 12.sp)
@@ -483,7 +490,7 @@ private fun OrderDetailsDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OrderDetailRow("Guest", order.guestName)
                 OrderDetailRow("Room", order.roomNumber)
-                OrderDetailRow("Status", order.status.displayName)
+                OrderDetailRow("Status", order.status.userFriendlyName)
                 OrderDetailRow("Items", order.items.size.toString())
                 
                 Spacer(Modifier.height(8.dp))
@@ -539,12 +546,12 @@ private fun OrderDetailRow(label: String, value: String) {
 
 private fun getStatusColor(status: OrderStatus): Color {
     return when (status) {
-        OrderStatus.RECEIVED -> Color(0xFFFF9800)
-        OrderStatus.PREPARING -> Color(0xFFFF6B6B)
+        OrderStatus.RECEIVED -> StatusReceived
+        OrderStatus.PREPARING -> StatusPreparing
         OrderStatus.READY -> SuccessGreen
-        OrderStatus.ON_THE_WAY -> Color(0xFF2196F3)
+        OrderStatus.ON_THE_WAY -> InfoBlue
         OrderStatus.DELIVERED -> SuccessGreen
-        OrderStatus.PENDING -> Color(0xFFFF9800)
-        OrderStatus.CANCELLED -> Color(0xFFF44336)
+        OrderStatus.PENDING -> WarningAmber
+        OrderStatus.CANCELLED -> ErrorRed
     }
 }

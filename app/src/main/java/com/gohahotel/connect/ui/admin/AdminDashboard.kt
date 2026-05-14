@@ -338,6 +338,8 @@ private fun BookingsTab(
                         labelColor = OnSurfaceDark
                     ),
                     border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = selectedFilter == status,
                         selectedBorderColor = GoldPrimary,
                         borderColor = GoldPrimary.copy(0.3f)
                     )
@@ -400,6 +402,8 @@ private fun OrdersTab(
                         labelColor = OnSurfaceDark
                     ),
                     border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = selectedFilter == status,
                         selectedBorderColor = GoldPrimary,
                         borderColor = GoldPrimary.copy(0.3f)
                     )
@@ -509,7 +513,7 @@ private fun AdminOrderCard(order: Order) {
                     color = getOrderStatusColor(order.status).copy(0.2f)
                 ) {
                     Text(
-                        order.status.displayName,
+                        order.status.userFriendlyName,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = getOrderStatusColor(order.status),

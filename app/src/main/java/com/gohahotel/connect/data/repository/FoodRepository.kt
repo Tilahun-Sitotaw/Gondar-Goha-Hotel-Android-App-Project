@@ -64,6 +64,15 @@ class FoodRepository @Inject constructor(
     fun getRecentOrders(): Flow<List<Order>> =
         orderDao.getRecentOrders().map { it.map { e -> e.toOrderDomain(gson) } }
 
+    suspend fun getAllOrders(): List<Order> {
+        return firestoreService.fetchAllOrders()
+    }
+
+    suspend fun updateOrderStatus(orderId: String, status: OrderStatus) {
+        firestoreService.updateOrderStatus(orderId, status.name)
+        orderDao.updateOrderStatus(orderId, status.name)
+    }
+
     suspend fun updateLocalOrderStatus(orderId: String, status: OrderStatus) {
         orderDao.updateOrderStatus(orderId, status.name)
     }

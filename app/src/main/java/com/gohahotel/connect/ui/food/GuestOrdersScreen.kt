@@ -129,7 +129,7 @@ private fun GuestOrderCard(order: Order, onClick: () -> Unit) {
                     }
                 ) {
                     Text(
-                        order.status.displayName,
+                        order.status.userFriendlyName,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = when (order.status.name) {

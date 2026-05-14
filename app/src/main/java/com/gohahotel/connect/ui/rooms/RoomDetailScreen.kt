@@ -329,6 +329,46 @@ fun RoomDetailScreen(
                         }
                     }
 
+                    Spacer(Modifier.height(12.dp))
+                    // Room Status Badge with user-friendly label
+                    val availability = uiState.roomAvailability
+                    if (availability != null) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(availability.status.color).copy(0.15f),
+                            border = BorderStroke(1.5.dp, Color(availability.status.color).copy(0.4f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .background(Color(availability.status.color), CircleShape)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        availability.status.userFriendlyName,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(availability.status.color)
+                                    )
+                                    if (availability.daysUntilAvailable > 0 && availability.status != RoomStatus.FREE) {
+                                        Text(
+                                            "Available in ${availability.daysUntilAvailable} day${if (availability.daysUntilAvailable > 1) "s" else ""}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color(availability.status.color).copy(0.7f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(0.3f))
                     Spacer(Modifier.height(16.dp))
