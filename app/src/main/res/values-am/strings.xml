@@ -44,6 +44,7 @@
     <string name="no_rooms_available">ምንም ክፍሎች አይገኙም</string>
     <string name="about_this_room">ስለ ይህ ክፍል</string>
     <string name="amenities">መቋቋሚያዎች</string>
+    <string name="mountain_view">ከክፍልዎ ፓኖራሚክ የተራራ እና የከተማ እይታዎች</string>
 
     <!-- In-Room Request -->
     <string name="in_room_request">የክፍል ውስጥ ጥያቄ</string>
@@ -61,6 +62,7 @@
     <string name="submit_request">ጥያቄ ያስገቡ</string>
     <string name="request_submitted">ጥያቄ ተልኳል!</string>
     <string name="request_submitted_body">ቡድናችን በቅርቡ ከናንተ ጋር ይሆናል።</string>
+    <string name="request_disclaimer">ጥያቄዎች ብዙውን ጊዜ በ15-20 ደቂቃዎች ውስጥ ይፈጸማሉ። ለድንገተኛ እርዳታ ከክፍል ስልክዎ 0 ይደውሉ።</string>
 
     <!-- Restaurant / Food -->
     <string name="restaurant">ምግብ ቤት</string>
@@ -72,6 +74,7 @@
     <string name="browse_menu">ምናሌ ይዳስሱ</string>
     <string name="cart_empty">ቅርጫቱ ባዶ ነው</string>
     <string name="clear_cart">ቅርጫቱን አጽዱ</string>
+    <string name="special_instructions">ልዩ መመሪያዎች (አማራጭ)</string>
     <string name="room_number">የክፍል ቁጥር</string>
 
     <!-- Order Tracking -->
@@ -80,6 +83,7 @@
     <string name="preparing">እየተዘጋጀ ነው</string>
     <string name="on_the_way">በመምጣት ላይ ነው</string>
     <string name="delivered">ደርሷል</string>
+    <string name="estimated_delivery">ግምት፡ ~%1$d ደቂቃዎች</string>
     <string name="order_summary">የትዕዛዝ ማጠቃለያ</string>
     <string name="total">ድምር</string>
     <string name="back_to_menu">ወደ ምናሌ ተመለስ</string>
@@ -97,11 +101,15 @@
     <string name="all_attractions">ሁሉም ስፍራዎች</string>
     <string name="available_offline">ያለ ኢንተርኔት ይገኛል</string>
     <string name="no_attractions_found">ምንም ስፍራዎች አልተገኙም</string>
+    <string name="opening_hours">የመክፈቻ ሰዓታት</string>
+    <string name="entry_fee">የመግቢያ ክፍያ</string>
+    <string name="location_coordinates">የቦታ መጋጠሚያዎች</string>
 
     <!-- QR Scanner -->
     <string name="qr_scanner">QR ቅኝት</string>
     <string name="qr_hint">ካሜራውን ወደ ጎሃ ሆቴል QR ኮድ ያዞሩ</string>
     <string name="camera_permission_required">የካሜራ ፈቃድ ያስፈልጋል</string>
+    <string name="camera_permission_rationale">በክፍልዎ ውስጥ ወይም በምግብ ቤት ውስጥ የQR ኮዶችን ለመቃኘት የካሜራ መዳረሻ ያስፈልጋል።</string>
     <string name="grant_permission">ፈቃድ ስጥ</string>
 
     <!-- Settings -->
@@ -109,7 +117,33 @@
     <string name="language">ቋንቋ</string>
     <string name="about">ስለ</string>
     <string name="support">ድጋፍ</string>
-    <string name="cancel">ሰርዝ</string>
+    <string name="hotel_name_full">ጎሃ ሆቴል፣ ጎንደር</string>
+    <string name="front_desk">የፊት ጠረጴዛ</string>
+    <string name="front_desk_ext">ኤክስቴንሽን 100</string>
+    <string name="app_version">የመተግበሪያ ስሪት</string>
+    <string name="technology">ቴክኖሎጂ</string>
+    <string name="kotlin_compose">ኮትሊን · ጄትፓክ ኮምፖዝ</string>
+    <string name="concierge_support">24/7 ኮንሴርጅ</string>
+    <string name="chat_anytime">በማንኛውም ጊዜ ከእኛ ጋር ይወያዩ</string>
+    <string name="emergency">አደጋ</string>
+    <string name="emergency_dial">ከክፍል ስልክ 0 ይደውሉ</string>
     <string name="sign_out_confirm_title">ውጣ</string>
     <string name="sign_out_confirm_body">ከጎሃ ሆቴል ኮኔክት መውጣት ይፈልጋሉ?</string>
+    <string name="cancel">ሰርዝ</string>
+    <string name="footer">© 2024 ጎሃ ሆቴል · ጎንደር፣ ኢትዮጵያ\nመብቱ በህግ የተጠበቀ ነው።</string>
+
+    <string name="terms_and_conditions">ውሎች እና ሁኔታዎች</string>
+    <string name="privacy_policy">የግላዊነት ፖሊሲ</string>
+    <string name="administration">አስተዳደር</string>
+    <string name="admin_dashboard">የአስተዳዳሪ ዳሽቦርድ</string>
+    <string name="manage_system">ክፍሎችን፣ ምናሌን እና ስርዓትን ያስዳድሩ</string>
+    <string name="staff_operations">የሰራተኞች ስራዎች</string>
+    <string name="manage_assigned">የተመደቡ የሆቴል ስራዎችን ያስዳድሩ</string>
+    <string name="today">ዛሬ፡ %1$s</string>
+    <string name="terms_content">ወደ ጎሃ ሆቴል ኮኔክት እንኳን በደህና መጡ። ይህን መተግበሪያ በመጠቀም በውሎቻችን ይስማማሉ። የእርስዎን ግላዊነት እና የውሂብዎን ደህንነት እናስቀድማለን። ይህ መተግበሪያ በጎንደር ጎሃ ሆቴል የሚቆዩበትን ጊዜ ለማሻሻል የተነደፈ ነው። የቦታ ማስያዣ ወይም የትዕዛዝ ስርዓቱን አላግባብ መጠቀም መለያ እንዲታገድ ሊያደርግ ይችላል።</string>
+
+    <!-- Notifications -->
+    <string name="sunset_notif_title">ጎሃ ሆቴል · የፀሐይ መጥለቅ ማስጠንቀቂያ</string>
+    <string name="hotel_notif_channel">የሆቴል ማሳወቂያዎች</string>
+    <string name="sunset_channel">የፀሐይ መጥለቅ ማስጠንቀቂያዎች</string>
 </resources>
