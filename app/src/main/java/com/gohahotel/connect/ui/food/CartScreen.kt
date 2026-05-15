@@ -52,6 +52,7 @@ fun CartScreen(
     LaunchedEffect(paymentUiState.paymentSuccess) {
         if (paymentUiState.paymentSuccess) {
             showPaymentSheet = false
+            // Automatically place order after successful payment
             viewModel.placeOrder(
                 roomNumber   = when (deliveryType) {
                     DeliveryType.ROOM    -> roomNumber.ifBlank { "Unknown" }
@@ -65,6 +66,13 @@ fun CartScreen(
                 paymentTransactionId = paymentUiState.transactionId ?: ""
             )
             paymentViewModel.resetState()
+        }
+    }
+
+    LaunchedEffect(uiState.activeOrderId) {
+        // Navigate to order tracking when order is successfully placed
+        uiState.activeOrderId?.let { orderId ->
+            onOrderPlaced(orderId)
         }
     }
 
