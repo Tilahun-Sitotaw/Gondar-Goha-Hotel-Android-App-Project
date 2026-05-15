@@ -133,17 +133,6 @@
     <string name="cancel">Cancel</string>
     <string name="footer">© 2024 Goha Hotel · Gondar, Ethiopia\nAll rights reserved.</string>
 
-    <!-- Added for completeness -->
-    <string name="terms_and_conditions">Terms and Conditions</string>
-    <string name="privacy_policy">Privacy Policy</string>
-    <string name="administration">Administration</string>
-    <string name="admin_dashboard">Admin Dashboard</string>
-    <string name="manage_system">Manage rooms, menu and system</string>
-    <string name="staff_operations">Staff Operations</string>
-    <string name="manage_assigned">Manage assigned hotel operations</string>
-    <string name="today">Today: %1$s</string>
-    <string name="terms_content">Welcome to Goha Hotel Connect. By using this app, you agree to our terms of service. We prioritize your privacy and the security of your data. This app is designed to enhance your stay at Goha Hotel, Gondar. Any misuse of the booking or ordering system may result in account suspension.</string>
-
     <!-- Notifications -->
     <string name="sunset_notif_title">Goha Hotel · Sunset Alert</string>
     <string name="hotel_notif_channel">Hotel Notifications</string>

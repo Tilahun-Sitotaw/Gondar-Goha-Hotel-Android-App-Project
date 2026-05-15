@@ -11,13 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.gohahotel.connect.R
 import com.gohahotel.connect.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -33,7 +31,6 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showTermsDialog by remember { mutableStateOf(false) }
 
     val languages = listOf(
         Triple("en", "English", "🇬🇧"),
@@ -44,8 +41,8 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.settings), fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, stringResource(R.string.cancel)) } },
+                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         }
@@ -85,7 +82,7 @@ fun SettingsScreen(
 
             // Admin Access
             if (uiState.userRole == "ADMIN") {
-                SectionHeader("🛠️ " + stringResource(R.string.administration))
+                SectionHeader("🛠️ Administration")
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     shape    = RoundedCornerShape(18.dp),
@@ -99,8 +96,8 @@ fun SettingsScreen(
                         Icon(Icons.Default.AdminPanelSettings, null, tint = GoldPrimary)
                         Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.admin_dashboard), fontWeight = FontWeight.Bold, color = GoldPrimary)
-                            Text(stringResource(R.string.manage_system), style = MaterialTheme.typography.labelSmall, color = GoldPrimary.copy(alpha = 0.7f))
+                            Text("Admin Dashboard", fontWeight = FontWeight.Bold, color = GoldPrimary)
+                            Text("Manage rooms, menu and system", style = MaterialTheme.typography.labelSmall, color = GoldPrimary.copy(alpha = 0.7f))
                         }
                         Icon(Icons.Default.ArrowForwardIos, null, Modifier.size(14.dp), tint = GoldPrimary)
                     }
@@ -111,7 +108,7 @@ fun SettingsScreen(
                     "KITCHEN" -> "Kitchen Operations"
                     "RECEPTION" -> "Front Desk & Reception"
                     "HOUSEKEEPING" -> "Housekeeping"
-                    else -> stringResource(R.string.staff_operations)
+                    else -> "Staff Dashboard"
                 }
                 val icon = when (uiState.userRole) {
                     "KITCHEN" -> Icons.Default.RestaurantMenu
@@ -119,7 +116,7 @@ fun SettingsScreen(
                     "HOUSEKEEPING" -> Icons.Default.CleaningServices
                     else -> Icons.Default.Badge
                 }
-                SectionHeader("🛎️ " + stringResource(R.string.staff_operations))
+                SectionHeader("🛎️ Staff Operations")
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     shape    = RoundedCornerShape(18.dp),
@@ -134,7 +131,7 @@ fun SettingsScreen(
                         Spacer(Modifier.width(16.dp))
                         Column(Modifier.weight(1f)) {
                             Text(title, fontWeight = FontWeight.Bold, color = TealLight)
-                            Text(stringResource(R.string.manage_assigned), style = MaterialTheme.typography.labelSmall, color = TealLight.copy(alpha = 0.7f))
+                            Text("Manage assigned hotel operations", style = MaterialTheme.typography.labelSmall, color = TealLight.copy(alpha = 0.7f))
                         }
                         Icon(Icons.Default.ArrowForwardIos, null, Modifier.size(14.dp), tint = TealPrimary)
                     }
@@ -143,7 +140,7 @@ fun SettingsScreen(
             }
 
             // Language section
-            SectionHeader("🌍 " + stringResource(R.string.language))
+            SectionHeader("🌍 Language")
             Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape    = RoundedCornerShape(18.dp),
@@ -183,7 +180,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(16.dp))
 
             // About section
-            SectionHeader("ℹ️ " + stringResource(R.string.about))
+            SectionHeader("ℹ️ About")
             Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape    = RoundedCornerShape(18.dp),
@@ -192,26 +189,23 @@ fun SettingsScreen(
                 )
             ) {
                 Column {
-                    SettingsRow(Icons.Default.Hotel, "Hotel", stringResource(R.string.hotel_name_full))
+                    SettingsRow(Icons.Default.Hotel, "Hotel", "Goha Hotel, Gondar")
                     HorizontalDivider(Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outline.copy(0.15f))
-                    SettingsRow(Icons.Default.PhoneInTalk, stringResource(R.string.front_desk), stringResource(R.string.front_desk_ext))
+                    SettingsRow(Icons.Default.PhoneInTalk, "Front Desk", "Extension 100")
                     HorizontalDivider(Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outline.copy(0.15f))
-                    SettingsRow(Icons.Default.Info, stringResource(R.string.app_version), uiState.appVersion)
+                    SettingsRow(Icons.Default.Info, "App Version", uiState.appVersion)
                     HorizontalDivider(Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outline.copy(0.15f))
-                    SettingsRow(Icons.Default.Code, stringResource(R.string.technology), stringResource(R.string.kotlin_compose))
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outline.copy(0.15f))
-                    SettingsRow(Icons.Default.Gavel, stringResource(R.string.terms_and_conditions), "", onClick = { showTermsDialog = true })
+                    SettingsRow(Icons.Default.Code, "Technology", "Kotlin · Jetpack Compose")
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
             // Support
-            SectionHeader("🛎️ " + stringResource(R.string.support))
+            SectionHeader("🛎️ Support")
             Card(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape    = RoundedCornerShape(18.dp),
@@ -220,10 +214,10 @@ fun SettingsScreen(
                 )
             ) {
                 Column {
-                    SettingsRow(Icons.Default.SupportAgent, stringResource(R.string.concierge_support), stringResource(R.string.chat_anytime))
+                    SettingsRow(Icons.Default.SupportAgent, "24/7 Concierge", "Chat with us anytime")
                     HorizontalDivider(Modifier.padding(horizontal = 16.dp),
                         color = MaterialTheme.colorScheme.outline.copy(0.15f))
-                    SettingsRow(Icons.Default.Emergency, stringResource(R.string.emergency), stringResource(R.string.emergency_dial))
+                    SettingsRow(Icons.Default.Emergency, "Emergency", "Dial 0 from room phone")
                 }
             }
 
@@ -238,7 +232,7 @@ fun SettingsScreen(
             ) {
                 Icon(Icons.Default.Logout, null, tint = ErrorRed, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.sign_out), color = ErrorRed, fontWeight = FontWeight.Bold)
+                Text("Sign Out", color = ErrorRed, fontWeight = FontWeight.Bold)
             }
 
             Spacer(Modifier.height(32.dp))
@@ -248,7 +242,7 @@ fun SettingsScreen(
             }
 
             Text(
-                text = stringResource(R.string.today, currentDateTime),
+                text = "Today: $currentDateTime",
                 style = MaterialTheme.typography.labelMedium,
                 color = GoldPrimary,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -259,7 +253,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = stringResource(R.string.footer),
+                text = "© ${Calendar.getInstance().get(Calendar.YEAR)} Goha Hotel · Gondar, Ethiopia\nAll rights reserved.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(0.35f),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -273,36 +267,17 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             icon  = { Icon(Icons.Default.Logout, null, tint = ErrorRed) },
-            title = { Text(stringResource(R.string.sign_out_confirm_title), fontWeight = FontWeight.Bold) },
-            text  = { Text(stringResource(R.string.sign_out_confirm_body)) },
+            title = { Text("Sign Out", fontWeight = FontWeight.Bold) },
+            text  = { Text("Are you sure you want to sign out from Goha Hotel Connect?") },
             confirmButton = {
                 Button(onClick = { viewModel.logout(onLogout) },
                     colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
                     shape  = RoundedCornerShape(12.dp)) {
-                    Text(stringResource(R.string.sign_out), color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Sign Out", color = MaterialTheme.colorScheme.onPrimary)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) { Text(stringResource(R.string.cancel)) }
-            },
-            shape = RoundedCornerShape(20.dp)
-        )
-    }
-
-    if (showTermsDialog) {
-        AlertDialog(
-            onDismissRequest = { showTermsDialog = false },
-            icon  = { Icon(Icons.Default.Gavel, null, tint = GoldPrimary) },
-            title = { Text(stringResource(R.string.terms_and_conditions), fontWeight = FontWeight.Bold) },
-            text  = { 
-                Text(
-                    stringResource(R.string.terms_content),
-                    textAlign = TextAlign.Justify,
-                    style = MaterialTheme.typography.bodySmall
-                ) 
-            },
-            confirmButton = {
-                TextButton(onClick = { showTermsDialog = false }) { Text("OK") }
+                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") }
             },
             shape = RoundedCornerShape(20.dp)
         )
@@ -317,12 +292,9 @@ private fun SectionHeader(title: String) {
 }
 
 @Composable
-private fun SettingsRow(icon: ImageVector, label: String, value: String, onClick: (() -> Unit)? = null) {
+private fun SettingsRow(icon: ImageVector, label: String, value: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = onClick != null) { onClick?.invoke() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment     = Alignment.CenterVertically
     ) {
@@ -332,11 +304,7 @@ private fun SettingsRow(icon: ImageVector, label: String, value: String, onClick
             Text(label, style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (value.isNotEmpty()) {
-            Text(value, style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.7f))
-        } else if (onClick != null) {
-            Icon(Icons.Default.ArrowForwardIos, null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f))
-        }
+        Text(value, style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.7f))
     }
 }

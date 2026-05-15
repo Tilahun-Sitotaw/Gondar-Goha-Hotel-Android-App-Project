@@ -44,7 +44,6 @@
     <string name="no_rooms_available">Aucune chambre disponible</string>
     <string name="about_this_room">À Propos de cette Chambre</string>
     <string name="amenities">Équipements</string>
-    <string name="mountain_view">Vues panoramiques sur la montagne et la ville depuis votre chambre</string>
 
     <!-- In-Room Request -->
     <string name="in_room_request">Service en Chambre</string>
@@ -62,7 +61,6 @@
     <string name="submit_request">Soumettre la Demande</string>
     <string name="request_submitted">Demande Soumise!</string>
     <string name="request_submitted_body">Notre équipe sera avec vous sous peu.</string>
-    <string name="request_disclaimer">Les demandes sont généralement satisfaites dans les 15 à 20 minutes. Pour une assistance urgente, composez le 0 depuis le téléphone de votre chambre.</string>
 
     <!-- Restaurant / Food -->
     <string name="restaurant">Restaurant</string>
@@ -74,7 +72,6 @@
     <string name="browse_menu">Parcourir le Menu</string>
     <string name="cart_empty">Votre panier est vide</string>
     <string name="clear_cart">Vider le Panier</string>
-    <string name="special_instructions">Instructions spéciales (optionnel)</string>
     <string name="room_number">Numéro de Chambre</string>
 
     <!-- Order Tracking -->
@@ -83,7 +80,6 @@
     <string name="preparing">En Préparation</string>
     <string name="on_the_way">En Route</string>
     <string name="delivered">Livré</string>
-    <string name="estimated_delivery">Estimation : ~%1$d minutes</string>
     <string name="order_summary">Résumé de la Commande</string>
     <string name="total">Total</string>
     <string name="back_to_menu">Retour au Menu</string>
@@ -101,15 +97,11 @@
     <string name="all_attractions">Toutes les Attractions</string>
     <string name="available_offline">Disponible hors ligne</string>
     <string name="no_attractions_found">Aucune attraction trouvée</string>
-    <string name="opening_hours">Heures d\'Ouverture</string>
-    <string name="entry_fee">Frais d\'Entrée</string>
-    <string name="location_coordinates">Coordonnées Géographiques</string>
 
     <!-- QR Scanner -->
     <string name="qr_scanner">Scanner QR</string>
     <string name="qr_hint">Pointez la caméra vers un code QR de l\'Hôtel Goha</string>
     <string name="camera_permission_required">Permission Caméra Requise</string>
-    <string name="camera_permission_rationale">L\'accès à la caméra est nécessaire pour scanner les codes QR dans votre chambre ou au restaurant.</string>
     <string name="grant_permission">Accorder la Permission</string>
 
     <!-- Settings -->
@@ -117,33 +109,7 @@
     <string name="language">Langue</string>
     <string name="about">À Propos</string>
     <string name="support">Assistance</string>
-    <string name="hotel_name_full">Goha Hôtel, Gondar</string>
-    <string name="front_desk">Réception</string>
-    <string name="front_desk_ext">Extension 100</string>
-    <string name="app_version">Version de l\'App</string>
-    <string name="technology">Technologie</string>
-    <string name="kotlin_compose">Kotlin · Jetpack Compose</string>
-    <string name="concierge_support">Concierge 24/7</string>
-    <string name="chat_anytime">Discutez avec nous à tout moment</string>
-    <string name="emergency">Urgence</string>
-    <string name="emergency_dial">Composez le 0 depuis le téléphone de la chambre</string>
+    <string name="cancel">Annuler</string>
     <string name="sign_out_confirm_title">Se Déconnecter</string>
     <string name="sign_out_confirm_body">Êtes-vous sûr de vouloir vous déconnecter de Goha Hôtel Connect?</string>
-    <string name="cancel">Annuler</string>
-    <string name="footer">© 2024 Goha Hôtel · Gondar, Éthiopie\nTous droits réservés.</string>
-
-    <string name="terms_and_conditions">Termes et Conditions</string>
-    <string name="privacy_policy">Politique de Confidentialité</string>
-    <string name="administration">Administration</string>
-    <string name="admin_dashboard">Tableau de bord Admin</string>
-    <string name="manage_system">Gérer les chambres, le menu et le système</string>
-    <string name="staff_operations">Opérations du personnel</string>
-    <string name="manage_assigned">Gérer les opérations hôtelières assignées</string>
-    <string name="today">Aujourd\'hui : %1$s</string>
-    <string name="terms_content">Bienvenue sur Goha Hôtel Connect. En utilisant cette application, vous acceptez nos conditions d\'utilisation. Nous accordons la priorité à votre vie privée et à la sécurité de vos données. Cette application est conçue pour améliorer votre séjour au Goha Hôtel, Gondar. Toute utilisation abusive du système de réservation ou de commande peut entraîner la suspension du compte.</string>
-
-    <!-- Notifications -->
-    <string name="sunset_notif_title">Goha Hôtel · Alerte Coucher de Soleil</string>
-    <string name="hotel_notif_channel">Notifications de l\'Hôtel</string>
-    <string name="sunset_channel">Alertes Coucher de Soleil</string>
 </resources>
